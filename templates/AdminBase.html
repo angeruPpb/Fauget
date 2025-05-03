@@ -1,0 +1,172 @@
+<!-- templates/AdminBase.html -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Administrador</title>
+    <!--////////////////////////////////////////////////////////////////////////////////////////////////////////////-->
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            min-height: 100vh;
+            background-color: #0707a1;
+            color: #2c2c2c;
+        }
+
+        /* Sidebar lateral */
+        .sidebar {
+            width: 240px;
+            background-color: #ffffff;
+            border-right: 1px solid #ddd;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+        }
+
+        .sidebar h2 {
+            font-size: 1.8rem;
+            color: #a66cff;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            width: 100%;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 1.2rem;
+        }
+
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #444;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .sidebar ul li a:hover {
+            color: #a66cff;
+            font-weight: bold;
+        }
+
+        .sidebar button {
+            margin-top: auto;
+            background-color: transparent;
+            border: none;
+            color: #a66cff;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 1rem 0;
+        }
+
+        /* Contenedor principal */
+        .content {
+            flex: 1;
+            padding: 3rem;
+        }
+
+        /* Tarjeta de contenido más descargado */
+        .tarjeta-panel {
+            background-color: #e5d5ff;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .tarjeta-panel h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #3c003c;
+            margin-bottom: 1rem;
+        }
+
+        .tarjeta-panel h2 {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #3c003c;
+            margin-bottom: 2rem;
+        }
+
+        /* Lista de contenido */
+        .contenido-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .item-contenido {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .item-contenido:hover {
+            transform: scale(1.02);
+        }
+
+        .item-contenido img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .item-contenido .info {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.9rem;
+        }
+
+        .item-contenido .info strong {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .item-contenido .info span {
+            font-size: 0.8rem;
+            color: #777;
+        }
+    </style>
+    <!--////////////////////////////////////////////////////////////////////////////////////////////////////////////-->
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Fauget</h2>
+        <ul>
+            <li><a href="/AdminPaginaPrincipal">Administrador</a></li>
+            <li><a href="/AdminGestorContenido">Gestionar contenido</a></li>
+            <li><a href="/AdminGestorCategorias">Gestionar categoría</a></li>
+            <li><a href="/AdminGestorPromociones">Gestionar promociones</a></li>
+            <li><a href="/CargarSaldo">Cargar saldo a usuario</a></li>
+        </ul>
+        <button onclick="window.location.href='/logout'">Cerrar sesión</button>
+    </div>
+
+    <div class="content">
+        <h1>Bienvenido al panel de administración</h1>
+        <p>Contenido principal de la página.</p>
+    </div>
+</body>
+
+</html>

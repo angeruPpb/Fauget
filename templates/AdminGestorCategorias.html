@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Categorías</title>
+    <style>
+        /* Estilos generales */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            min-height: 100vh;
+            background-color: #0707a1;
+            color: #2c2c2c;
+        }
+
+        /* Sidebar lateral */
+        .sidebar {
+            width: 240px;
+            background-color: #ffffff;
+            border-right: 1px solid #ddd;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+        }
+
+        .sidebar h2 {
+            font-size: 1.8rem;
+            color: #a66cff;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            width: 100%;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 1.2rem;
+        }
+
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #444;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .sidebar ul li a:hover {
+            color: #a66cff;
+            font-weight: bold;
+        }
+
+        .sidebar button {
+            margin-top: auto;
+            background-color: transparent;
+            border: none;
+            color: #a66cff;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 1rem 0;
+        }
+
+        /* Contenedor principal */
+        .content {
+            flex: 1;
+            padding: 3rem;
+        }
+
+        /* Tarjeta de contenido más descargado */
+        .tarjeta-panel {
+            background-color: #e5d5ff;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .tarjeta-panel h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #3c003c;
+            margin-bottom: 1rem;
+        }
+
+        .tarjeta-panel h2 {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #3c003c;
+            margin-bottom: 2rem;
+        }
+
+        /* Lista de contenido */
+        .contenido-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Estilo para los botones con formato de item-contenido */
+        .item-contenido {
+            background-color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, background-color 0.3s;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            margin: 1rem;
+        }
+
+        .item-contenido:hover {
+            transform: scale(1.02);
+            background-color: #f0f0f0;
+        }
+
+        .item-contenido .info {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.9rem;
+        }
+
+        .item-contenido .info strong {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .item-contenido .info span {
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        /* Eliminar el estilo predeterminado de los botones */
+        button.item-contenido {
+            all: unset;
+            /* Resetea todos los estilos predeterminados del botón */
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        /* Estilo general para los formularios */
+    .form-container {
+        margin-top: 2rem;
+        padding: 2rem;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container h3 {
+        text-align: center;
+        font-size: 1.5rem;
+        color: #3c003c;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-container form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .form-container form label {
+        font-size: 1rem;
+        color: #3c003c;
+        font-weight: bold;
+    }
+
+    .form-container form input,
+    .form-container form select {
+        padding: 0.8rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: #f9f9f9;
+        transition: border-color 0.3s;
+    }
+
+    .form-container form input:focus,
+    .form-container form select:focus {
+        border-color: #a66cff;
+        outline: none;
+    }
+
+    .form-container form button {
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        background-color: #a66cff;
+        color: #fff;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .form-container form button:hover {
+        background-color: #8b5fcf;
+    }
+
+    .back-button {
+        margin-top: 1rem;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        background-color: #ccc;
+        color: #333;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .back-button:hover {
+        background-color: #bbb;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Fauget</h2>
+        <ul>
+            <li><a href="/AdminPaginaPrincipal">Administrador</a></li>
+            <li><a href="/AdminGestorContenido">Gestionar contenido</a></li>
+            <li><a href="/AdminGestorCategorias">Gestionar categoría</a></li>
+            <li><a href="/AdminGestorPromociones">Gestionar promociones</a></li>
+            <li><a href="/CargarSaldo">Cargar saldo a usuario</a></li>
+        </ul>
+        <button onclick="window.location.href='/logout'">Cerrar sesión</button>
+    </div>
+
+    <div class="content">
+        <div class="tarjeta-panel">
+            <h1>Gestión de Categorías</h1>
+            <h2>Seleccione una opción</h2>
+            <div class="options" id="main-options">
+                <button id="add-category" class="item-contenido">
+                    <div class="info">
+                        <strong>Agregar Categoría</strong>
+                        <span>Crear una nueva categoría</span>
+                    </div>
+                </button>
+                <button id="edit-category" class="item-contenido">
+                    <div class="info">
+                        <strong>Editar Categoría</strong>
+                        <span>Modificar una categoría existente</span>
+                    </div>
+                </button>
+                <button id="delete-category" class="item-contenido">
+                    <div class="info">
+                        <strong>Eliminar Categoría</strong>
+                        <span>Eliminar una categoría existente</span>
+                    </div>
+                </button>
+            </div>
+
+            <div class="form-container" id="form-container" style="display: none;">
+                <!-- Formulario para Agregar Categoría -->
+                <div id="add-category-form" style="display: none;">
+                    <h3>Agregar Categoría</h3>
+                    <form id="category-form">
+                        <label for="category-name">Nombre de la Categoría</label>
+                        <input type="text" id="category-name" placeholder="Ingrese el nombre de la categoría" required>
+            
+                        <label for="parent-category">Categoría Padre</label>
+                        <select id="parent-category" required>
+                            <option value="video">Video</option>
+                            <option value="imagen">Imagen</option>
+                            <option value="sonido">Sonido</option>
+                        </select>
+            
+                        <button type="submit">Guardar</button>
+                    </form>
+                    <button class="back-button">Atrás</button>
+                </div>
+            
+                <!-- Formulario para Editar Categoría -->
+                <div id="edit-category-form" style="display: none;">
+                    <h3>Editar Categoría</h3>
+                    <form>
+                        <label for="edit-category-name">Nombre Actual de la Categoría</label>
+                        <input type="text" id="edit-category-name" placeholder="Ingrese el nombre actual de la categoría" required>
+            
+                        <label for="new-category-name">Nuevo Nombre de la Categoría</label>
+                        <input type="text" id="new-category-name" placeholder="Ingrese el nuevo nombre de la categoría" required>
+            
+                        <label for="new-parent-category">Categoría Padre</label>
+                        <select id="new-parent-category" required>
+                            <option value="video">Video</option>
+                            <option value="imagen">Imagen</option>
+                            <option value="sonido">Sonido</option>
+                        </select>
+            
+                        <button type="submit">Editar</button>
+                    </form>
+                    <button class="back-button">Atrás</button>
+                </div>
+            
+                <!-- Formulario para Eliminar Categoría -->
+                <div id="delete-category-form" style="display: none;">
+                    <h3>Eliminar Categoría</h3>
+                    <form>
+                        <label for="delete-category-name">Nombre de la Categoría</label>
+                        <input type="text" id="delete-category-name" placeholder="Ingrese el nombre de la categoría" required>
+            
+                        <label for="parent-category">Categoría Padre</label>
+                        <select id="parent-category" required>
+                            <option value="video">Video</option>
+                            <option value="imagen">Imagen</option>
+                            <option value="sonido">Sonido</option>
+                        </select>
+            
+                        <button type="submit">Eliminar</button>
+                    </form>
+                    <button class="back-button">Atrás</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const mainOptions = document.getElementById("main-options");
+            const formContainer = document.getElementById("form-container");
+            const addCategoryForm = document.getElementById("add-category-form");
+            const editCategoryForm = document.getElementById("edit-category-form");
+            const deleteCategoryForm = document.getElementById("delete-category-form");
+
+            // Botones principales
+            const addCategoryButton = document.getElementById("add-category");
+            const editCategoryButton = document.getElementById("edit-category");
+            const deleteCategoryButton = document.getElementById("delete-category");
+
+            // Botones "Atrás"
+            const backButtons = document.querySelectorAll(".back-button");
+
+            // Mostrar el formulario correspondiente
+            addCategoryButton.addEventListener("click", () => {
+                mainOptions.style.display = "none";
+                formContainer.style.display = "block";
+                addCategoryForm.style.display = "block";
+            });
+
+            editCategoryButton.addEventListener("click", () => {
+                mainOptions.style.display = "none";
+                formContainer.style.display = "block";
+                editCategoryForm.style.display = "block";
+            });
+
+            deleteCategoryButton.addEventListener("click", () => {
+                mainOptions.style.display = "none";
+                formContainer.style.display = "block";
+                deleteCategoryForm.style.display = "block";
+            });
+
+            // Manejar el botón "Atrás"
+            backButtons.forEach(button => {
+                button.addEventListener("click", () => {
+                    const confirmBack = confirm("¿Está seguro de que desea cancelar la operación y regresar?");
+                    if (confirmBack) {
+                        formContainer.style.display = "none";
+                        addCategoryForm.style.display = "none";
+                        editCategoryForm.style.display = "none";
+                        deleteCategoryForm.style.display = "none";
+                        mainOptions.style.display = "block";
+                    }
+                });
+            });
+
+            // Agregar categoría
+            const categoryForm = document.getElementById("category-form");
+            categoryForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const categoryName = document.getElementById("category-name").value.trim();
+                const parentCategory = document.getElementById("parent-category").value;
+
+                // Verificar si la categoría ya existe
+                const exists = await verificarCategoria(categoryName, parentCategory);
+                if (exists) {
+                    alert(`La categoría "${categoryName}" ya existe.`);
+                    return; // Detener el proceso si la categoría ya existe
+                }
+
+                // Enviar solicitud para agregar la categoría
+                try {
+                    const response = await fetch('/agregarCategoria', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nombre: categoryName, categoria_padre: parentCategory })
+                    });
+
+                    if (response.ok) {
+                        alert(`Categoría "${categoryName}" agregada correctamente.`);
+                        categoryForm.reset();
+                        formContainer.style.display = "none";
+                        mainOptions.style.display = "block";
+                    } else {
+                        alert("Error al agregar la categoría.");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("Ocurrió un error al agregar la categoría.");
+                }
+            });
+
+            // Editar categoría
+            const editCategoryFormElement = document.querySelector("#edit-category-form form");
+            editCategoryFormElement.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const currentName = document.getElementById("edit-category-name").value.trim();
+                const newName = document.getElementById("new-category-name").value.trim();
+                const parentCategory = document.getElementById("new-parent-category").value; // Usado solo para verificar
+
+                console.log(`Intentando editar la categoría: "${currentName}"`);
+                console.log(`Nuevo nombre propuesto: "${newName}"`);
+                console.log(`Categoría padre para verificación: "${parentCategory}"`);
+
+                // Verificar si la categoría actual existe
+                const exists = await verificarCategoria(currentName, parentCategory);
+                if (!exists) {
+                    alert(`La categoría "${currentName}" con padre "${parentCategory}" no existe.`);
+                    console.error(`La categoría "${currentName}" con padre "${parentCategory}" no existe.`);
+                    return;
+                }
+
+                // Enviar solicitud para editar la categoría
+                try {
+                    const response = await fetch('/editarCategoria', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nombre_actual: currentName, nuevo_nombre: newName })
+                    });
+
+                    if (response.ok) {
+                        alert(`Categoría "${currentName}" editada correctamente a "${newName}".`);
+                        console.log(`Categoría "${currentName}" editada correctamente a "${newName}".`);
+                        editCategoryFormElement.reset();
+                        formContainer.style.display = "none";
+                        mainOptions.style.display = "block";
+                    } else {
+                        alert("Error al editar la categoría.");
+                        console.error("Error al editar la categoría. Código de estado:", response.status);
+                    }
+                } catch (error) {
+                    console.error("Error al realizar la solicitud para editar la categoría:", error);
+                    alert("Ocurrió un error al editar la categoría.");
+                }
+            });
+
+            // Eliminar categoría
+            const deleteCategoryFormElement = document.querySelector("#delete-category-form form");
+            deleteCategoryFormElement.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const categoryName = document.getElementById("delete-category-name").value.trim();
+                const parentCategory = document.getElementById("parent-category").value;
+
+                console.log(`Intentando eliminar la categoría: "${categoryName}" con padre "${parentCategory}"`);
+
+                // Verificar si la categoría existe
+                const exists = await verificarCategoria(categoryName, parentCategory);
+                if (!exists) {
+                    alert(`La categoría "${categoryName}" con padre "${parentCategory}" no existe.`);
+                    console.error(`La categoría "${categoryName}" con padre "${parentCategory}" no existe.`);
+                    return;
+                }
+
+                // Advertencia al usuario
+                const confirmDelete = confirm(
+                    `Si elimina la categoría "${categoryName}", todos los contenidos asociados no serán eliminados, pero quedarán sin categoría asociada. Tendrá que reasignarlos manualmente. ¿Desea continuar?`
+                );
+                if (!confirmDelete) {
+                    console.log("Eliminación cancelada por el usuario.");
+                    return;
+                }
+
+                // Enviar solicitud para eliminar la categoría
+                try {
+                    const response = await fetch('/eliminarCategoria', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nombre: categoryName, categoria_padre: parentCategory })
+                    });
+
+                    if (response.ok) {
+                        alert(`Categoría "${categoryName}" eliminada correctamente.`);
+                        console.log(`Categoría "${categoryName}" eliminada correctamente.`);
+                        deleteCategoryFormElement.reset();
+                        formContainer.style.display = "none";
+                        mainOptions.style.display = "block";
+                    } else {
+                        alert("Error al eliminar la categoría.");
+                        console.error("Error al eliminar la categoría. Código de estado:", response.status);
+                    }
+                } catch (error) {
+                    console.error("Error al realizar la solicitud para eliminar la categoría:", error);
+                    alert("Ocurrió un error al eliminar la categoría.");
+                }
+            });
+
+            // Función para verificar si una categoría existe
+            async function verificarCategoria(nombre, padre) {
+                try {
+                    const response = await fetch(`/verificarCategoria?nombre=${encodeURIComponent(nombre)}&padre=${encodeURIComponent(padre)}`);
+
+                    if (response.ok) {
+                        const text = await response.text(); // Obtén la respuesta como texto
+                        console.log(`Respuesta completa del servidor: ${text}`); // Depuración: Ver la respuesta completa
+
+                        const data = JSON.parse(text); // Intenta parsear el texto como JSON
+                        console.log(`Respuesta parseada: ${JSON.stringify(data)}`);
+                        return data.existe;
+                    } else {
+                        console.error("Error al verificar la categoría. Código de estado:", response.status);
+                        return false;
+                    }
+                } catch (error) {
+                    console.error("Error al realizar la solicitud para verificar la categoría:", error);
+                    return false;
+                }
+            }
+        });
+    </script>
+    </script>
+</body>
+
+</html>
