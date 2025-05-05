@@ -13,102 +13,133 @@ DB_CONFIG = {
     'database': 'proyecto'
 }
 
-def agregar_categoria(data):
-    nombre = data['nombre']
-    categoria_padre = data['categoria_padre']
+class GestorCategorias: # Objeto OG02
+    @staticmethod
+    def agregar_categoria(data):
+        nombre = data['nombre']
+        categoria_padre = data['categoria_padre']
 
-    try:
-        conexion = mysql.connector.connect(**DB_CONFIG)
-        cursor = conexion.cursor()
-        cursor.execute("INSERT INTO TablaCategorias (nombre, categoria_padre) VALUES (%s, %s)", (nombre, categoria_padre))
-        conexion.commit()
-        return True
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        return False
-    finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'conexion' in locals(): conexion.close()
-
-def eliminar_categoria(data):
-    nombre = data.get('nombre')
-    categoria_padre = data.get('categoria_padre')
-
-    try:
-        conexion = mysql.connector.connect(**DB_CONFIG)
-        cursor = conexion.cursor()
-
-        # Verificar si la categoría existe con el nombre y la categoría padre
-        cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
-        existe = cursor.fetchone()[0] > 0
-
-        if not existe:
-            print(f"La categoría '{nombre}' con padre '{categoria_padre}' no existe.")
+        try:
+            conexion = mysql.connector.connect(**DB_CONFIG)
+            cursor = conexion.cursor()
+            cursor.execute("INSERT INTO TablaCategorias (nombre, categoria_padre) VALUES (%s, %s)", (nombre, categoria_padre))
+            conexion.commit()
+            return True
+        except mysql.connector.Error as err:
+            print(f"Error al agregar la categoría: {err}")
             return False
+        finally:
+            if 'cursor' in locals(): cursor.close()
+            if 'conexion' in locals(): conexion.close()
 
-        # Actualizar los contenidos asociados a la categoría eliminada
-        #cursor.execute(
-        #    "UPDATE TablaContenidos SET categoria = %s WHERE categoria = %s",
-        #    (categoria_padre, nombre)
-        #)
+    @staticmethod
+    def eliminar_categoria(data):
+        nombre = data.get('nombre')
+        categoria_padre = data.get('categoria_padre')
 
-        # Eliminar la categoría
-        cursor.execute("DELETE FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
-        conexion.commit()
+        try:
+            conexion = mysql.connector.connect(**DB_CONFIG)
+            cursor = conexion.cursor()
 
-        print(f"Categoría '{nombre}' con padre '{categoria_padre}' eliminada correctamente. Contenidos reasignados a la categoría padre '{categoria_padre}'.")
-        return True
-    except mysql.connector.Error as err:
-        print(f"Error al eliminar la categoría: {err}")
-        return False
-    finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'conexion' in locals(): conexion.close()
+            # Verificar si la categoría existe
+            print(f"Depuración: Verificando si la categoría '{nombre}' con padre '{categoria_padre}' existe.")
+            cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
+            existe = cursor.fetchone()[0] > 0
+            print(f"Depuración: Resultado de existencia: {existe}")
 
-def editar_categoria(data):
-    nombre_actual = data.get('nombre_actual')
-    nuevo_nombre = data.get('nuevo_nombre')
+            if not existe:
+                print(f"La categoría '{nombre}' con padre '{categoria_padre}' no existe.")
+                return False
 
-    try:
-        conexion = mysql.connector.connect(**DB_CONFIG)
-        cursor = conexion.cursor()
+            # Obtener la categoría padre de la categoría eliminada
+            print(f"Depuración: Obteniendo la categoría padre de '{nombre}'.")
+            cursor.execute("SELECT categoria_padre FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
+            nueva_categoria = cursor.fetchone()
+            cursor.fetchall()  # Limpia cualquier resultado pendiente
+            print(f"Depuración: Resultado de la categoría padre: {nueva_categoria}")
 
-        # Actualizar el nombre de la categoría
-        cursor.execute("UPDATE TablaCategorias SET nombre = %s WHERE nombre = %s", (nuevo_nombre, nombre_actual))
-        conexion.commit()
+            if nueva_categoria is None:
+                print(f"No se pudo determinar la categoría padre de '{nombre}'.")
+                return False
+            nueva_categoria = nueva_categoria[0]
 
-        print(f"Categoría '{nombre_actual}' actualizada a '{nuevo_nombre}'.")
-        return True
-    except mysql.connector.Error as err:
-        print(f"Error al editar la categoría: {err}")
-        return False
-    finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'conexion' in locals(): conexion.close()
+            # Actualizar los contenidos relacionados en TablaContenidos
+            print(f"Depuración: Actualizando los contenidos relacionados en TablaContenidos.")
+            # cursor.execute("UPDATE tablacontenidos SET categoria = %s WHERE categoria = %s", (nueva_categoria, nombre))
+            # conexion.commit()
+            print(f"Depuración: Contenidos actualizados correctamente.")
 
-def verificar_categoria(nombre, padre):
-    try:
-        conexion = mysql.connector.connect(**DB_CONFIG)
-        cursor = conexion.cursor()
-        cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, padre))
-        existe = cursor.fetchone()[0] > 0
+            # Actualizar los contenidos relacionados en TablaCategorias
+            print(f"Depuración: Actualizando los contenidos relacionados en TablaCategorias.")
+            cursor.execute("UPDATE TablaCategorias SET categoria_padre = %s WHERE categoria_padre = %s", (nueva_categoria, nombre))
+            conexion.commit()
+            print(f"Depuración: Categorias actualizados correctamente.")
 
-        # Imprimir en la consola si la categoría existe o no
-        if existe:
-            print(f"La categoría '{nombre}' con padre '{padre}' ya existe.")
-        else:
-            print(f"La categoría '{nombre}' con padre '{padre}' no existe.")
+            # Eliminar la categoría
+            print(f"Depuración: Eliminando la categoría '{nombre}' con padre '{categoria_padre}'.")
+            cursor.execute("DELETE FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
+            conexion.commit()
+            print(f"Depuración: Categoría eliminada correctamente.")
 
-        return existe
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        return False
-    finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'conexion' in locals(): conexion.close()
+            print(f"Categoría '{nombre}' con padre '{categoria_padre}' eliminada correctamente.")
+            print(f"Todos los contenidos relacionados fueron reasignados a la categoría '{nueva_categoria}'.")
+            return True
+        except mysql.connector.Error as err:
+            print(f"Error al eliminar la categoría: {err}")
+            return False
+        finally:
+            if 'cursor' in locals(): cursor.close()
+            if 'conexion' in locals(): conexion.close()
+
+    @staticmethod
+    def editar_categoria(data):
+        nombre_actual = data.get('nombre_actual')
+        nuevo_nombre = data.get('nuevo_nombre')
+
+        try:
+            conexion = mysql.connector.connect(**DB_CONFIG)
+            cursor = conexion.cursor()
+
+            # Actualizar el nombre de la categoría
+            cursor.execute("UPDATE TablaCategorias SET nombre = %s WHERE nombre = %s", (nuevo_nombre, nombre_actual))
+            conexion.commit()
+
+            # Actualizar los contenidos relacionados en TablaContenidos
+            # cursor.execute("UPDATE tablacontenidos SET categoria = %s WHERE categoria = %s", (nuevo_nombre, nombre_actual))
+            # conexion.commit()
+
+            print(f"Categoría '{nombre_actual}' actualizada a '{nuevo_nombre}' en TablaCategorias y TablaContenidos.")
+
+            return True
+        except mysql.connector.Error as err:
+            print(f"Error al editar la categoría: {err}")
+            return False
+        finally:
+            if 'cursor' in locals(): cursor.close()
+            if 'conexion' in locals(): conexion.close()
+
+    @staticmethod
+    def verificar_categoria(nombre, padre):
+        try:
+            conexion = mysql.connector.connect(**DB_CONFIG)
+            cursor = conexion.cursor()
+            cursor.execute("SELECT EXISTS(SELECT 1 FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s)", (nombre, padre))
+            existe = cursor.fetchone()[0]
+
+            if existe:
+                print(f"La categoría '{nombre}' con padre '{padre}' ya existe.")
+            else:
+                print(f"La categoría '{nombre}' con padre '{padre}' no existe.")
+
+            return existe
+        except mysql.connector.Error as err:
+            print(f"Error al verificar la categoría: {err}")
+            return False
+        finally:
+            if 'cursor' in locals(): cursor.close()
+            if 'conexion' in locals(): conexion.close()
 
 class Manejador(BaseHTTPRequestHandler):
-    # Configuración de rutas
     RUTAS = {
         '/': 'login.html',
         '/AdminPaginaPrincipal': 'AdminPaginaPrincipal.html',
@@ -124,6 +155,9 @@ class Manejador(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split('?')[0]  # Ignorar parámetros en la URL
 
+        if path == '/':
+            self.serve_page('login.html')
+            return
         # Manejar la ruta de la página principal del administrador
         if path == '/AdminPaginaPrincipal':
             self.serve_page('AdminPaginaPrincipal.html')
@@ -144,19 +178,69 @@ class Manejador(BaseHTTPRequestHandler):
             nombre = query.get('nombre', [None])[0]
             padre = query.get('padre', [None])[0]
 
-            if nombre and padre:
-                existe = verificar_categoria(nombre, padre)
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'existe': existe}).encode('utf-8'))
-                return  # Detener el flujo después de enviar la respuesta
-            else:
+            if not nombre:
                 self.send_response(400)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': "Faltan los parámetros 'nombre' o 'padre'"}).encode('utf-8'))
-                return  # Detener el flujo después de enviar la respuesta
+                self.wfile.write(json.dumps({'error': "El parámetro 'nombre' es obligatorio."}).encode('utf-8'))
+                return
+
+            # Si el padre está vacío, no verificarlo
+            if not padre:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'existe': True}).encode('utf-8'))
+                return
+
+            # Verificar si la categoría padre existe
+            existe = GestorCategorias.verificar_categoria(nombre, padre)
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'existe': existe}).encode('utf-8'))
+            return
+
+        if self.path.startswith('/getCategorias'):
+            print("Ruta /getCategorias detectada")  # Depuración
+            query = parse_qs(urlparse(self.path).query)
+            filter_parent = query.get('filter', [''])[0]
+            sort = query.get('sort', ['false'])[0] == 'true'
+
+            print(f"Parámetros recibidos: filter={filter_parent}, sort={sort}") 
+
+            try:
+                conexion = mysql.connector.connect(**DB_CONFIG)
+                cursor = conexion.cursor(dictionary=True)
+
+                # Construir la consulta SQL
+                sql = "SELECT * FROM TablaCategorias"
+                params = []
+
+                if filter_parent:
+                    sql += " WHERE categoria_padre = %s"
+                    params.append(filter_parent)
+
+                if sort:
+                    sql += " ORDER BY nombre ASC"
+
+                cursor.execute(sql, params)
+                categorias = cursor.fetchall()
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(categorias).encode('utf-8'))
+                return
+            except mysql.connector.Error as err:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(err)}).encode('utf-8'))
+                return
+            finally:
+                if 'cursor' in locals(): cursor.close()
+                if 'conexion' in locals(): conexion.close()
 
         # Manejar la ruta de gestionar promociones
         if path == '/AdminGestorPromociones':
@@ -173,9 +257,29 @@ class Manejador(BaseHTTPRequestHandler):
             self.redirect('/')
             return
 
+        if self.path.startswith('/.well-known/'):
+            self.send_response(204)  # No Content
+            self.end_headers()
+            return
+        
         # Si la ruta no coincide con ninguna, devolver un error 404
         self.send_error(404, "Página no encontrada")
-    
+
+    def serve_page(self, template_name):
+        """Sirve una página HTML desde la carpeta de plantillas."""
+        try:
+            # Cargar la plantilla HTML
+            with open(os.path.join('templates', template_name), 'r', encoding='utf-8') as f:
+                html = f.read()
+
+            # Enviar la respuesta al cliente
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(html.encode('utf-8'))
+        except FileNotFoundError:
+            self.send_error(404, "Archivo no encontrado")
+
     def serve_admin_page(self, path):
         try:
             # Cargar la plantilla base
@@ -250,20 +354,7 @@ class Manejador(BaseHTTPRequestHandler):
             self.send_error(500, f'Error interno: {str(e)}')
         print(f"Sirviendo archivo estático: {file_path}")
     
-    def serve_page(self, template_name):
-        """Sirve una página HTML desde la carpeta de plantillas."""
-        try:
-            # Cargar la plantilla HTML
-            with open(os.path.join('templates', template_name), 'r', encoding='utf-8') as f:
-                html = f.read()
-
-            # Enviar la respuesta al cliente
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(html.encode('utf-8'))
-        except FileNotFoundError:
-            self.send_error(404, "Archivo no encontrado")
+    
 
     def redirect(self, location):
         self.send_response(302)
@@ -299,21 +390,14 @@ class Manejador(BaseHTTPRequestHandler):
                 if 'cursor' in locals(): cursor.close()
                 if 'conexion' in locals(): conexion.close()
         
-        if self.path == '/agregarCategoria':
-            content_length = int(self.headers['Content-Length'])
-            post_data = json.loads(self.rfile.read(content_length))
-            if agregar_categoria(post_data):
-                self.send_response(200)
-            else:
-                self.send_error(500)
-            self.end_headers()
-
-        elif self.path == '/eliminarCategoria':
+        elif self.path == '/agregarCategoria':
             content_length = int(self.headers['Content-Length'])
             post_data = json.loads(self.rfile.read(content_length))
 
             nombre = post_data.get('nombre')
             categoria_padre = post_data.get('categoria_padre')
+
+            print(f"Datos recibidos: nombre={nombre}, categoria_padre={categoria_padre}")  # Depuración
 
             if not nombre or not categoria_padre:
                 self.send_response(400)
@@ -323,7 +407,86 @@ class Manejador(BaseHTTPRequestHandler):
                 return
 
             try:
-                resultado = eliminar_categoria({'nombre': nombre, 'categoria_padre': categoria_padre})
+                conexion = mysql.connector.connect(**DB_CONFIG)
+                cursor = conexion.cursor()
+
+                # Verificar si la categoría padre existe
+                print(f"Datos recibidos: nombre={nombre}, categoria_padre={categoria_padre}")  # Depuración
+                cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE categoria_padre = %s OR nombre = %s", (categoria_padre, categoria_padre))
+                result = cursor.fetchone()
+                print(f"Resultado de la consulta: {result[0]}")
+
+                if result is None or result[0] == 0:
+                    parent_exists = False
+                else:
+                    parent_exists = result[0] > 0
+
+                print(f"¿Existe la categoría padre? {parent_exists}")  # Depuración
+
+                if not parent_exists:
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'La categoría padre no existe.'}).encode('utf-8'))
+                    return
+
+                # Verificar si ya existe una fila con el mismo nombre y categoría padre
+                cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
+                result = cursor.fetchone()
+                print(f"Resultado de la consulta para nombre y categoría padre: {result}")  # Depuración
+
+                if result is not None and result[0] > 0:
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'La categoría con este nombre y categoría padre ya existe.'}).encode('utf-8'))
+                    return
+                
+                # Insertar la nueva categoría
+                cursor.execute("INSERT INTO TablaCategorias (nombre, categoria_padre) VALUES (%s, %s)", (nombre, categoria_padre))
+                conexion.commit()
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'mensaje': 'Categoría agregada correctamente.'}).encode('utf-8'))
+            except mysql.connector.Error as err:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(err)}).encode('utf-8'))
+            finally:
+                if 'cursor' in locals(): cursor.close()
+                if 'conexion' in locals(): conexion.close()
+
+        elif self.path == '/eliminarCategoria':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            print(f"Datos recibidos en el servidor: {post_data}")  # Depuración
+            data = json.loads(post_data)
+
+            nombre = data.get('nombre')
+            categoria_padre = data.get('categoria_padre')
+
+            print(f"Nombre: {nombre}, Categoría Padre: {categoria_padre}")  # Depuración
+
+            if not nombre or not categoria_padre:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Faltan parámetros'}).encode('utf-8'))
+                return
+            
+            # Verificar si la categoría padre es ROOT
+            if categoria_padre.upper() == "ROOT":
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'No se puede eliminar una categoría ROOT.'}).encode('utf-8'))
+                return
+
+            try:
+                resultado = GestorCategorias.eliminar_categoria({'nombre': nombre, 'categoria_padre': categoria_padre})
                 if resultado:
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
@@ -356,7 +519,7 @@ class Manejador(BaseHTTPRequestHandler):
                 return
 
             try:
-                resultado = editar_categoria({'nombre_actual': nombre_actual, 'nuevo_nombre': nuevo_nombre})
+                resultado = GestorCategorias.editar_categoria({'nombre_actual': nombre_actual, 'nuevo_nombre': nuevo_nombre})
                 if resultado:
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
