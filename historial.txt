@@ -1,8 +1,9 @@
 python3 -m venv venv
 .\venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
 
-/*
+
 CREATE DATABASE proyecto
     DEFAULT CHARACTER SET = 'utf8mb4'
     COLLATE = 'utf8mb4_general_ci';
@@ -15,7 +16,7 @@ CREATE TABLE proyecto.TablaUsuarios (
 
 INSERT INTO proyecto.TablaUsuarios (username_, password_)
 VALUES ('admin', '1234');
-*/
+
 
 CREATE TABLE proyecto.TablaCategorias (
     id INT AUTO_INCREMENT PRIMARY KEY, -- Identificador único para cada categoría
