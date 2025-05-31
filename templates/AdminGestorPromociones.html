@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Promociones</title>
+    <style>
+        /* Estilos generales */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            min-height: 100vh;
+            background-color: #0707a1;
+            color: #2c2c2c;
+        }
+
+        /* Sidebar lateral */
+        .sidebar {
+            width: 240px;
+            background-color: #ffffff;
+            border-right: 1px solid #ddd;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+        }
+
+        .sidebar h2 {
+            font-size: 1.8rem;
+            color: #a66cff;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            width: 100%;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 1.2rem;
+        }
+
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #444;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .sidebar ul li a:hover {
+            color: #a66cff;
+            font-weight: bold;
+        }
+
+        .sidebar button {
+            margin-top: auto;
+            background-color: transparent;
+            border: none;
+            color: #a66cff;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 1rem 0;
+        }
+
+        /* Contenedor principal */
+        .content {
+            flex: 1;
+            padding: 3rem;
+        }
+
+        /* Tarjeta de contenido más descargado */
+        .tarjeta-panel {
+            background-color: #e5d5ff;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .tarjeta-panel h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #3c003c;
+            margin-bottom: 1rem;
+        }
+
+        .tarjeta-panel h2 {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #3c003c;
+            margin-bottom: 2rem;
+        }
+
+        /* Lista de contenido */
+        .contenido-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Estilo para los botones con formato de item-contenido */
+        .item-contenido {
+            background-color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, background-color 0.3s;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            margin: 1rem;
+        }
+
+        .item-contenido:hover {
+            transform: scale(1.02);
+            background-color: #f0f0f0;
+        }
+
+        .item-contenido .info {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.9rem;
+        }
+
+        .item-contenido .info strong {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .item-contenido .info span {
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        /* Eliminar el estilo predeterminado de los botones */
+        button.item-contenido {
+            all: unset;
+            /* Resetea todos los estilos predeterminados del botón */
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Estilo general para los formularios */
+        .form-container {
+            margin-top: 2rem;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container h3 {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #3c003c;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-container form label {
+            font-size: 1rem;
+            color: #3c003c;
+            font-weight: bold;
+        }
+
+        .form-container form input,
+        .form-container form select {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s;
+        }
+
+        .form-container form input:focus,
+        .form-container form select:focus {
+            border-color: #a66cff;
+            outline: none;
+        }
+
+        .form-container form button {
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #a66cff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .form-container form button:hover {
+            background-color: #8b5fcf;
+        }
+
+        .back-button {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #ccc;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #bbb;
+        }
+
+        .content {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .options {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .table-container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-container h3 {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #3c003c;
+            margin-bottom: 1rem;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .filters label {
+            font-size: 1rem;
+            color: #3c003c;
+            font-weight: bold;
+        }
+
+        .filters select,
+        .filters button {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+
+        .filters button {
+            background-color: #a66cff;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        .filters button:hover {
+            background-color: #8b5fcf;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        table th,
+        table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #a66cff;
+            color: #fff;
+        }
+
+        table tr:hover {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Fauget</h2>
+        <ul>
+            <li><a href="/AdminPaginaPrincipal">Administrador</a></li>
+            <li><a href="/AdminGestorContenido">Gestionar contenido</a></li>
+            <li><a href="/AdminGestorCategorias">Gestionar categoría</a></li>
+            <li><a href="/AdminGestorPromociones">Gestionar promociones</a></li>
+            <li><a href="/CargarSaldo">Cargar saldo a usuario</a></li>
+        </ul>
+        <button onclick="window.location.href='/logout'">Cerrar sesión</button>
+    </div>
+
+    <div class="content">
+        <div class="tarjeta-panel">
+            <h1>Gestión de Promociones</h1>
+            <h2>Seleccione una opción</h2>
+            <div class="options" id="main-options">
+                <button id="add-category" class="item-contenido">
+                    <div class="info">
+                        <strong>Agregar promoción</strong>
+                        <span>Crear una nueva promoción</span>
+                    </div>
+                </button>
+                <button id="edit-category" class="item-contenido">
+                    <div class="info">
+                        <strong>Editar promoción</strong>
+                        <span>Modificar una promoción existente</span>
+                    </div>
+                </button>
+                <button id="delete-category" class="item-contenido">
+                    <div class="info">
+                        <strong>Eliminar promoción</strong>
+                        <span>Eliminar una promoción existente</span>
+                    </div>
+                </button>
+            </div>
+            <!-- Formulario para Agregar Promoción -->
+            <div class="form-container" id="add-promo-form" style="display:none;">
+                <h3>Agregar Promoción</h3>
+                <form id="promo-form">
+                    <label for="promo-nombre">Nombre</label>
+                    <input type="text" id="promo-nombre" name="nombre" required maxlength="100">
+
+                    <label for="promo-desc">Descripción</label>
+                    <input type="text" id="promo-desc" name="descripcion" required maxlength="255">
+
+                    <label for="promo-inicio">Fecha de inicio</label>
+                    <input type="date" id="promo-inicio" name="fecha_inicio" required min="">
+
+                    <label for="promo-fin">Fecha de fin</label>
+                    <input type="date" id="promo-fin" name="fecha_fin" required min="">
+
+                    <label for="promo-porcentaje">% Descuento</label>
+                    <input type="number" id="promo-porcentaje" name="porcentaje" required min="1" max="99" step="1">
+
+                    <label>Aplicar promoción por:</label>
+                    <select id="promo-aplicar-por" required>
+                        <option value="">Seleccione una opción</option>
+                        <option value="autor">Autor</option>
+                        <option value="categoria">Categoría</option>
+                    </select>
+
+                    <div id="promo-autor-select" style="display:none;">
+                        <label for="promo-autor">Seleccione el autor</label>
+                        <select id="promo-autor"></select>
+                    </div>
+                    <div id="promo-categoria-select" style="display:none;">
+                        <label for="promo-categoria">Seleccione la categoría</label>
+                        <select id="promo-categoria"></select>
+                    </div>
+
+                    <div id="promo-contenidos-list" style="margin-top:1rem;">
+                        <!-- Aquí se mostrarán los contenidos afectados -->
+                    </div>
+
+                    <button type="submit">Agregar Promoción</button>
+                </form>
+                <button class="back-button" type="button"
+                    onclick="document.getElementById('add-promo-form').style.display='none';document.getElementById('main-options').style.display='flex';">Atrás</button>
+                <div id="promo-success-msg"
+                    style="color: #3c003c; background: #d1ffd1; border-radius: 8px; padding: 1rem; text-align: center; margin-top: 1rem; display: none; font-weight: bold;">
+                    <span id="promo-success-text"></span><br>
+                    <button id="promo-success-btn"
+                        style="margin-top:1rem; padding:0.7rem 2rem; border:none; border-radius:8px; background:#a66cff; color:#fff; font-size:1.1rem; font-weight:bold; cursor:pointer; display:none;">
+                        Continuar
+                    </button>
+                </div>
+            </div>
+            <!-- Formulario para Editar Promoción -->
+            <div id="edit-promo-form" class="form-container" style="display: none;">
+                <h3>Editar Promoción</h3>
+                <form id="promo-search-form"
+                    style="margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <label for="promo-edit-search" style="font-weight: bold;">Ingrese el <b>ID</b> o <b>Nombre</b> de la
+                        promoción a editar</label>
+                    <input type="text" id="promo-edit-search" name="busqueda"
+                        placeholder="ID o Nombre (sensible a mayúsculas/minúsculas)" required
+                        style="width: 80%; max-width: 350px;">
+                    <button type="submit" style="width: 50%; max-width: 200px;">Buscar</button>
+                    <p id="promo-edit-search-error"
+                        style="color: red; display: none; text-align: center; margin-top: 1rem;"></p>
+                </form>
+                <form id="promo-edit-fields-form"
+                    style="display: none; flex-direction: column; gap: 1.2rem; max-width: 400px; margin: 0 auto;">
+                    <label for="promo-edit-nombre">Nombre</label>
+                    <input type="text" id="promo-edit-nombre" name="nombre" required maxlength="100">
+
+                    <label for="promo-edit-desc">Descripción</label>
+                    <input type="text" id="promo-edit-desc" name="descripcion" required maxlength="255">
+
+                    <label for="promo-edit-inicio">Fecha de inicio</label>
+                    <input type="date" id="promo-edit-inicio" name="fecha_inicio" required>
+
+                    <label for="promo-edit-fin">Fecha de fin</label>
+                    <input type="date" id="promo-edit-fin" name="fecha_fin" required>
+
+                    <label for="promo-edit-porcentaje">% Descuento</label>
+                    <input type="number" id="promo-edit-porcentaje" name="porcentaje" required min="1" max="99"
+                        step="1">
+
+                    <label>Contenidos afectados:</label>
+                    <div id="promo-edit-contenidos-list" style="margin-bottom:1rem;"></div>
+
+                    <button type="submit">Guardar Cambios</button>
+                </form>
+                <button class="back-button" type="button"
+                    onclick="document.getElementById('edit-promo-form').style.display='none';document.getElementById('main-options').style.display='flex';">Atrás</button>
+                <p id="promo-edit-success-msg"
+                    style="color: #3c003c; background: #d1ffd1; border-radius: 8px; padding: 1rem; text-align: center; margin-top: 1rem; display: none; font-weight: bold;">
+                </p>
+                <p id="promo-edit-error-msg"
+                    style="color: #e74c3c; text-align: center; margin-top: 1rem; display: none;"></p>
+            </div>
+            <!-- Formulario para Eliminar Promoción -->
+            <div id="delete-promo-form" class="form-container" style="display: none;">
+                <h3>Eliminar Promoción</h3>
+                <form id="promo-delete-search-form"
+                    style="margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <label for="promo-delete-search" style="font-weight: bold;">
+                        Ingrese el <b>ID</b> de la promoción a eliminar
+                    </label>
+                    <input type="text" id="promo-delete-search" name="busqueda" placeholder="ID de la promoción"
+                        required style="width: 80%; max-width: 350px;">
+                    <button type="submit" style="width: 50%; max-width: 200px;">Buscar</button>
+                    <p id="promo-delete-search-error"
+                        style="color: red; display: none; text-align: center; margin-top: 1rem;"></p>
+                </form>
+                <div id="promo-delete-info" style="display:none;">
+                    <p><b>Nombre:</b> <span id="promo-delete-nombre"></span></p>
+                    <p><b>Descripción:</b> <span id="promo-delete-desc"></span></p>
+                    <p><b>% Descuento:</b> <span id="promo-delete-porcentaje"></span></p>
+                    <p><b>Fecha inicio:</b> <span id="promo-delete-inicio"></span></p>
+                    <p><b>Fecha fin:</b> <span id="promo-delete-fin"></span></p>
+                    <div id="promo-delete-contenidos-list" style="margin:1rem 0;"></div>
+                    <button id="promo-delete-btn" style="background:#e74c3c;">Eliminar promoción</button>
+                    <button id="promo-delete-cancel-btn" type="button" class="back-button">Cancelar</button>
+                </div>
+                <div id="promo-delete-warning"
+                    style="display:none; color:#e67e22; background:#fffbe6; border-radius:8px; padding:1rem; margin-top:1rem; text-align:center;">
+                    <p>¿Está seguro que desea eliminar esta promoción? Se eliminará de la base de datos y de todos los
+                        contenidos que la usen.</p>
+                    <button id="promo-delete-confirm-btn"
+                        style="background:#e74c3c; color:#fff; margin:0 1rem;">Continuar</button>
+                    <button id="promo-delete-cancel-confirm-btn" class="back-button" type="button">Cancelar</button>
+                </div>
+                <p id="promo-delete-success-msg"
+                    style="color: #3c003c; background: #d1ffd1; border-radius: 8px; padding: 1rem; text-align: center; margin-top: 1rem; display: none; font-weight: bold;">
+                </p>
+                <p id="promo-delete-error-msg"
+                    style="color: #e74c3c; text-align: center; margin-top: 1rem; display: none;"></p>
+            </div>
+            <!-- Tabla de Promociones -->
+            <div class="table-container">
+                <h3>Lista de promociones</h3>
+                <div class="filters">
+                    <label for="fecha-filtro-inicio">Ver promociones activas desde:</label>
+                    <input type="date" id="fecha-filtro-inicio">
+                    <label for="fecha-filtro-fin">hasta:</label>
+                    <input type="date" id="fecha-filtro-fin">
+                    <button id="filtrar-promos-btn">Filtrar</button>
+                    <button id="ver-todas-promos-btn">Ver todas</button>
+                </div>
+                <table id="tabla-promociones">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>% Descuento</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Aquí se llenarán las filas dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const addPromoBtn = document.getElementById("add-category");
+            const addPromoForm = document.getElementById("add-promo-form");
+            const mainOptions = document.getElementById("main-options");
+            const promoForm = document.getElementById("promo-form");
+            const promoInicio = document.getElementById("promo-inicio");
+            const promoFin = document.getElementById("promo-fin");
+            const promoAplicarPor = document.getElementById("promo-aplicar-por");
+            const promoAutorSelect = document.getElementById("promo-autor-select");
+            const promoAutor = document.getElementById("promo-autor");
+            const promoCategoriaSelect = document.getElementById("promo-categoria-select");
+            const promoCategoria = document.getElementById("promo-categoria");
+            const promoContenidosList = document.getElementById("promo-contenidos-list");
+            const promoSuccessMsg = document.getElementById("promo-success-msg");
+
+            // Mostrar formulario al hacer click en "Agregar promoción"
+            addPromoBtn.addEventListener("click", () => {
+                addPromoForm.style.display = "block";
+                mainOptions.style.display = "none";
+                setMinDates();
+                promoForm.reset();
+                promoAutorSelect.style.display = "none";
+                promoCategoriaSelect.style.display = "none";
+                promoContenidosList.innerHTML = "";
+            });
+
+            // Validar fechas
+            function setMinDates() {
+                const today = new Date().toISOString().split('T')[0];
+                promoInicio.min = today;
+                promoInicio.value = today;
+                promoFin.min = today;
+                promoFin.value = today;
+            }
+            promoInicio.addEventListener("change", () => {
+                promoFin.min = promoInicio.value;
+                if (promoFin.value < promoInicio.value) promoFin.value = promoInicio.value;
+            });
+
+            // Cargar autores y categorías
+            async function cargarAutores() {
+                const res = await fetch("/promoGetAutores");
+                const autores = await res.json();
+                promoAutor.innerHTML = '<option value="">Seleccione un autor</option>';
+                autores.forEach(a => {
+                    promoAutor.innerHTML += `<option value="${a.autor}">${a.autor}</option>`;
+                });
+            }
+            async function cargarCategorias() {
+                const res = await fetch("/promoGetCategorias");
+                const cats = await res.json();
+                promoCategoria.innerHTML = '<option value="">Seleccione una categoría</option>';
+                cats.forEach(c => {
+                    promoCategoria.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+                });
+            }
+
+            promoAplicarPor.addEventListener("change", async () => {
+                promoContenidosList.innerHTML = "";
+                if (promoAplicarPor.value === "autor") {
+                    promoAutorSelect.style.display = "block";
+                    promoCategoriaSelect.style.display = "none";
+                    await cargarAutores();
+                } else if (promoAplicarPor.value === "categoria") {
+                    promoAutorSelect.style.display = "none";
+                    promoCategoriaSelect.style.display = "block";
+                    await cargarCategorias();
+                } else {
+                    promoAutorSelect.style.display = "none";
+                    promoCategoriaSelect.style.display = "none";
+                }
+            });
+
+            // Mostrar contenidos afectados según selección
+            promoAutor.addEventListener("change", async () => {
+                if (!promoAutor.value) return promoContenidosList.innerHTML = "";
+                const res = await fetch(`/promoGetContenidosPorAutor?autor=${encodeURIComponent(promoAutor.value)}`);
+                const contenidos = await res.json();
+                renderContenidosAfectados(contenidos);
+            });
+            promoCategoria.addEventListener("change", async () => {
+                if (!promoCategoria.value) return promoContenidosList.innerHTML = "";
+                const res = await fetch(`/promoGetContenidosPorCategoria?categoria=${encodeURIComponent(promoCategoria.value)}`);
+                const contenidos = await res.json();
+                renderContenidosAfectados(contenidos);
+            });
+
+            function renderContenidosAfectados(lista) {
+                if (!lista.length) {
+                    promoContenidosList.innerHTML = "<p style='color:#e74c3c;'>No hay contenidos para esta selección.</p>";
+                    return;
+                }
+                promoContenidosList.innerHTML = "<b>Contenidos afectados:</b><ul style='margin-top:0.5rem;'>";
+                lista.forEach(c => {
+                    promoContenidosList.innerHTML += `<li>${c.nombre} (${c.autor})</li>`;
+                });
+                promoContenidosList.innerHTML += "</ul>";
+            }
+
+            // Enviar formulario
+            promoForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                // Validaciones extra
+                if (parseInt(promoForm.porcentaje.value) < 1 || parseInt(promoForm.porcentaje.value) > 99) {
+                    alert("El porcentaje debe ser un número entre 1 y 99.");
+                    return;
+                }
+                let modo = promoAplicarPor.value;
+                let valor = modo === "autor" ? promoAutor.value : promoCategoria.value;
+                if (!valor) {
+                    alert("Seleccione un " + (modo === "autor" ? "autor" : "categoría") + ".");
+                    return;
+                }
+                // Enviar datos al backend
+                const body = {
+                    nombre: promoForm.nombre.value,
+                    descripcion: promoForm.descripcion.value,
+                    fecha_inicio: promoForm.fecha_inicio.value,
+                    fecha_fin: promoForm.fecha_fin.value,
+                    porcentaje: parseInt(promoForm.porcentaje.value),
+                    modo,
+                    valor
+                };
+                const res = await fetch("/agregarPromocion", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) {
+                    promoSuccessMsg.textContent = "¡Promoción agregada y aplicada correctamente!";
+                    promoSuccessMsg.style.display = "block";
+                    // Oculta el formulario y muestra la gestión principal después de 1.5 segundos
+                    setTimeout(() => {
+                        promoSuccessMsg.style.display = "none";
+                        addPromoForm.style.display = "none";
+                        mainOptions.style.display = "flex";
+                        cargarPromociones();
+                    }, 2000);
+                } else {
+                    const err = await res.json();
+                    promoErrorMsg.textContent = "Error: " + (err.error || "No se pudo agregar la promoción.");
+                    promoErrorMsg.style.display = "block";
+                }
+            });
+
+            const tablaPromos = document.getElementById("tabla-promociones").querySelector("tbody");
+            const filtroInicio = document.getElementById("fecha-filtro-inicio");
+            const filtroFin = document.getElementById("fecha-filtro-fin");
+            const filtrarBtn = document.getElementById("filtrar-promos-btn");
+            const verTodasBtn = document.getElementById("ver-todas-promos-btn");
+
+
+            // Editar promoción
+            const editPromoBtn = document.getElementById("edit-category");
+            const editPromoForm = document.getElementById("edit-promo-form");
+            const promoSearchForm = document.getElementById("promo-search-form");
+            const promoEditFieldsForm = document.getElementById("promo-edit-fields-form");
+            const promoEditNombre = document.getElementById("promo-edit-nombre");
+            const promoEditDesc = document.getElementById("promo-edit-desc");
+            const promoEditInicio = document.getElementById("promo-edit-inicio");
+            const promoEditFin = document.getElementById("promo-edit-fin");
+            const promoEditContenidosList = document.getElementById("promo-edit-contenidos-list");
+            const promoEditSearchError = document.getElementById("promo-edit-search-error");
+            const promoEditSuccessMsg = document.getElementById("promo-edit-success-msg");
+            const promoEditErrorMsg = document.getElementById("promo-edit-error-msg");
+            const promoEditPorcentaje = document.getElementById("promo-edit-porcentaje");
+            let promoEditId = null;
+
+            // Mostrar formulario de edición
+            editPromoBtn.addEventListener("click", () => {
+                editPromoForm.style.display = "block";
+                mainOptions.style.display = "none";
+                promoSearchForm.style.display = "flex";
+                promoEditFieldsForm.style.display = "none";
+                promoEditSearchError.style.display = "none";
+                promoEditSuccessMsg.style.display = "none";
+                promoEditErrorMsg.style.display = "none";
+                promoSearchForm.reset();
+            });
+
+            // Buscar promoción por ID
+            promoSearchForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                promoEditSearchError.style.display = "none";
+                promoEditFieldsForm.style.display = "none";
+                promoEditSuccessMsg.style.display = "none";
+                promoEditErrorMsg.style.display = "none";
+                const busqueda = document.getElementById("promo-edit-search").value.trim();
+                if (!busqueda) return;
+
+                // Buscar por ID si es número, si no por nombre exacto
+                let res;
+                if (/^\d+$/.test(busqueda)) {
+                    res = await fetch(`/proGetPromocionById?id=${busqueda}`);
+                } else {
+                    res = await fetch(`/proGetPromocionByNombre?nombre=${encodeURIComponent(busqueda)}`);
+                }
+                if (!res.ok) {
+                    promoEditSearchError.textContent = "No se encontró la promoción.";
+                    promoEditSearchError.style.display = "block";
+                    return;
+                }
+                const promo = await res.json();
+                if (!promo || !promo.id) {
+                    promoEditSearchError.textContent = "No se encontró la promoción.";
+                    promoEditSearchError.style.display = "block";
+                    return;
+                }
+                // Llenar campos
+                promoEditId = promo.id; // Oculto, para enviar en el update
+                promoEditNombre.value = promo.nombre;
+                promoEditDesc.value = promo.descripcion;
+                promoEditInicio.value = promo.fecha_inicio;
+                promoEditFin.value = promo.fecha_fin;
+                promoEditPorcentaje.value = promo.porcentaje || '';
+                // Mostrar contenidos afectados
+                const resCont = await fetch(`/promGetContenidosPorPromocion?id=${promo.id}`);
+                const contenidos = await resCont.json();
+                if (contenidos.length === 0) {
+                    promoEditContenidosList.innerHTML = "<p style='color:#e74c3c;'>Ningún contenido tiene esta promoción.</p>";
+                } else {
+                    promoEditContenidosList.innerHTML = "<ul style='margin-top:0.5rem;'>";
+                    contenidos.forEach(c => {
+                        promoEditContenidosList.innerHTML += `<li>${c.nombre} - ${c.autor}</li>`;
+                    });
+                    promoEditContenidosList.innerHTML += "</ul>";
+                }
+                promoEditFieldsForm.style.display = "flex";
+            });
+
+            // Guardar cambios
+            promoEditFieldsForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                promoEditSuccessMsg.style.display = "none";
+                promoEditErrorMsg.style.display = "none";
+                // Validación
+                if (
+                    !promoEditNombre.value.trim() ||
+                    !promoEditDesc.value.trim() ||
+                    !promoEditInicio.value ||
+                    !promoEditFin.value ||
+                    !promoEditPorcentaje.value
+                ) {
+                    promoEditErrorMsg.textContent = "Por favor, complete todos los campos.";
+                    promoEditErrorMsg.style.display = "block";
+                    return;
+                }
+                const body = {
+                    id: promoEditId,
+                    nombre: promoEditNombre.value,
+                    descripcion: promoEditDesc.value,
+                    fecha_inicio: promoEditInicio.value,
+                    fecha_fin: promoEditFin.value,
+                    porcentaje: parseInt(promoEditPorcentaje.value)
+                };
+                const res = await fetch("/editarPromocion", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) {
+                    promoEditSuccessMsg.textContent = "¡Promoción editada correctamente!";
+                    promoEditSuccessMsg.style.display = "block";
+                    setTimeout(() => {
+                        promoEditSuccessMsg.style.display = "none";
+                        editPromoForm.style.display = "none";
+                        mainOptions.style.display = "flex";
+                        cargarPromociones();
+                    }, 1500);
+                } else {
+                    const err = await res.json();
+                    promoEditErrorMsg.textContent = "Error: " + (err.error || "No se pudo editar la promoción.");
+                    promoEditErrorMsg.style.display = "block";
+                }
+            });
+
+            // Eliminar promoción
+            const deletePromoBtn = document.getElementById("delete-category");
+            const deletePromoForm = document.getElementById("delete-promo-form");
+            const promoDeleteSearchForm = document.getElementById("promo-delete-search-form");
+            const promoDeleteInfo = document.getElementById("promo-delete-info");
+            const promoDeleteNombre = document.getElementById("promo-delete-nombre");
+            const promoDeleteDesc = document.getElementById("promo-delete-desc");
+            const promoDeletePorcentaje = document.getElementById("promo-delete-porcentaje");
+            const promoDeleteInicio = document.getElementById("promo-delete-inicio");
+            const promoDeleteFin = document.getElementById("promo-delete-fin");
+            const promoDeleteContenidosList = document.getElementById("promo-delete-contenidos-list");
+            const promoDeleteBtn = document.getElementById("promo-delete-btn");
+            const promoDeleteCancelBtn = document.getElementById("promo-delete-cancel-btn");
+            const promoDeleteWarning = document.getElementById("promo-delete-warning");
+            const promoDeleteConfirmBtn = document.getElementById("promo-delete-confirm-btn");
+            const promoDeleteCancelConfirmBtn = document.getElementById("promo-delete-cancel-confirm-btn");
+            const promoDeleteSearchError = document.getElementById("promo-delete-search-error");
+            const promoDeleteSuccessMsg = document.getElementById("promo-delete-success-msg");
+            const promoDeleteErrorMsg = document.getElementById("promo-delete-error-msg");
+            let promoDeleteId = null;
+
+            // Mostrar formulario de eliminar
+            deletePromoBtn.addEventListener("click", () => {
+                deletePromoForm.style.display = "block";
+                mainOptions.style.display = "none";
+                promoDeleteSearchForm.style.display = "flex";
+                promoDeleteInfo.style.display = "none";
+                promoDeleteWarning.style.display = "none";
+                promoDeleteSearchError.style.display = "none";
+                promoDeleteSuccessMsg.style.display = "none";
+                promoDeleteErrorMsg.style.display = "none";
+                promoDeleteSearchForm.reset();
+            });
+
+            // Buscar promoción por ID
+            promoDeleteSearchForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                promoDeleteSearchError.style.display = "none";
+                promoDeleteInfo.style.display = "none";
+                promoDeleteWarning.style.display = "none";
+                promoDeleteSuccessMsg.style.display = "none";
+                promoDeleteErrorMsg.style.display = "none";
+                const busqueda = document.getElementById("promo-delete-search").value.trim();
+                if (!busqueda) return;
+                let res = await fetch(`/proGetPromocionById?id=${busqueda}`);
+                if (!res.ok) {
+                    promoDeleteSearchError.textContent = "No se encontró la promoción.";
+                    promoDeleteSearchError.style.display = "block";
+                    return;
+                }
+                const promo = await res.json();
+                if (!promo || !promo.id) {
+                    promoDeleteSearchError.textContent = "No se encontró la promoción.";
+                    promoDeleteSearchError.style.display = "block";
+                    return;
+                }
+                promoDeleteId = promo.id;
+                promoDeleteNombre.textContent = promo.nombre;
+                promoDeleteDesc.textContent = promo.descripcion;
+                promoDeletePorcentaje.textContent = promo.porcentaje + "%";
+                promoDeleteInicio.textContent = promo.fecha_inicio;
+                promoDeleteFin.textContent = promo.fecha_fin;
+                // Mostrar contenidos afectados
+                const resCont = await fetch(`/promGetContenidosPorPromocion?id=${promo.id}`);
+                const contenidos = await resCont.json();
+                if (contenidos.length === 0) {
+                    promoDeleteContenidosList.innerHTML = "<p style='color:#e74c3c;'>Ningún contenido tiene esta promoción.</p>";
+                } else {
+                    promoDeleteContenidosList.innerHTML = "<b>Contenidos afectados:</b><ul style='margin-top:0.5rem;'>";
+                    contenidos.forEach(c => {
+                        promoDeleteContenidosList.innerHTML += `<li>${c.nombre} - ${c.autor}</li>`;
+                    });
+                    promoDeleteContenidosList.innerHTML += "</ul>";
+                }
+                promoDeleteInfo.style.display = "block";
+            });
+
+            // Al hacer click en eliminar, mostrar advertencia
+            promoDeleteBtn.addEventListener("click", () => {
+                promoDeleteWarning.style.display = "block";
+            });
+
+            // Cancelar advertencia
+            promoDeleteCancelBtn.addEventListener("click", () => {
+                deletePromoForm.style.display = "none";
+                mainOptions.style.display = "flex";
+            });
+            promoDeleteCancelConfirmBtn.addEventListener("click", () => {
+                promoDeleteWarning.style.display = "none";
+            });
+
+            // Confirmar eliminación
+            promoDeleteConfirmBtn.addEventListener("click", async () => {
+                promoDeleteSuccessMsg.style.display = "none";
+                promoDeleteErrorMsg.style.display = "none";
+                const res = await fetch("/eliminarPromocion", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: promoDeleteId })
+                });
+                if (res.ok) {
+                    promoDeleteWarning.style.display = "none";
+                    promoDeleteInfo.style.display = "none";
+                    promoDeleteSuccessMsg.textContent = "¡Promoción eliminada correctamente!";
+                    promoDeleteSuccessMsg.style.display = "block";
+                    setTimeout(() => {
+                        promoDeleteSuccessMsg.style.display = "none";
+                        deletePromoForm.style.display = "none";
+                        mainOptions.style.display = "flex";
+                        cargarPromociones();
+                    }, 1500);
+                } else {
+                    const err = await res.json();
+                    promoDeleteErrorMsg.textContent = "Error: " + (err.error || "No se pudo eliminar la promoción.");
+                    promoDeleteErrorMsg.style.display = "block";
+                }
+            });
+            // Variable global para almacenar las promociones
+            let promocionesGlobal = [];
+            // Cargar promociones al inicio
+            async function cargarPromociones() {
+                // Ajusta la ruta según tu backend
+                const res = await fetch("/getPromociones");
+                promocionesGlobal = await res.json();
+                renderPromos(promocionesGlobal);
+            }
+
+            function renderPromos(lista) {
+                tablaPromos.innerHTML = "";
+                if (lista.length === 0) {
+                    tablaPromos.innerHTML = `<tr><td colspan="6" style="text-align:center;">Sin promociones</td></tr>`;
+                    return;
+                }
+                for (const promo of lista) {
+                    tablaPromos.innerHTML += `
+            <tr>
+                <td>${promo.id}</td>
+                <td>${promo.nombre || ''}</td>
+                <td>${promo.descripcion}</td>
+                <td>${promo.porcentaje}%</td>
+                <td>${promo.fecha_inicio}</td>
+                <td>${promo.fecha_fin}</td>
+            </tr>
+        `;
+                }
+            }
+
+            filtrarBtn.addEventListener("click", () => {
+                const inicio = filtroInicio.value;
+                const fin = filtroFin.value;
+                const hoy = new Date().toISOString().slice(0, 10);
+                let filtradas = promocionesGlobal;
+                if (inicio) {
+                    filtradas = filtradas.filter(p => p.fecha_fin >= inicio);
+                }
+                if (fin) {
+                    filtradas = filtradas.filter(p => p.fecha_inicio <= fin);
+                }
+                renderPromos(filtradas);
+            });
+
+            verTodasBtn.addEventListener("click", () => {
+                filtroInicio.value = "";
+                filtroFin.value = "";
+                renderPromos(promocionesGlobal);
+            });
+
+            cargarPromociones();
+        });
+    </script>
+    </script>
+</body>
+
+</html>

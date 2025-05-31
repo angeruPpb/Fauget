@@ -3,6 +3,13 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
+antes de usar sql en xampp importante modificar el tamaño de archivos maximo
+ir a config de sql y cambiar el siguiente campo 
+[mysqld]
+max_allowed_packet=100M
+
+o hacerlo directamente en consulta sql con 
+SET GLOBAL max_allowed_packet = 104857600; // Esto solo funciona por la sesion actual
 
 CREATE DATABASE proyecto
     DEFAULT CHARACTER SET = 'utf8mb4'
@@ -80,3 +87,4 @@ INSERT INTO proyecto.TablaCategorias (nombre, categoria_padre) VALUES
 -- Sub-subcategorías de Jazz
 ('Smooth Jazz', 'Jazz'),
 ('Jazz Bebop', 'Jazz');
+

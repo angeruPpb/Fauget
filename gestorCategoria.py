@@ -1,6 +1,8 @@
 import mysql.connector
 from gestorConfig import DB_CONFIG
-
+'''
+Objeto gestor categorias OG18 modifica la tabla categorias OE14 y la tabla contenidos OE07
+'''
 class GestorCategorias: 
     @staticmethod
     def agregar_categoria(data):

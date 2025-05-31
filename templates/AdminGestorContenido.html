@@ -410,49 +410,120 @@
                 <!-- Formulario para Editar Contenido -->
                 <div id="edit-content-form" style="display: none;">
                     <h3>Editar Contenido</h3>
-                    <form id="edit-content-search-form">
-                        <label for="edit-content-current-name">Nombre del Contenido a Editar</label>
-                        <input type="text" id="edit-content-current-name" name="nombre_actual"
-                            placeholder="Ingrese el nombre actual" required>
-                        <button type="button" id="validate-content-btn">Validar</button>
+                    <form id="edit-content-search-form"
+                        style="margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                        <label for="edit-content-search" style="font-weight: bold;">Ingrese el <b>ID</b> o <b>Nombre</b>
+                            del contenido a editar</label>
+                        <input type="text" id="edit-content-search" name="busqueda"
+                            placeholder="ID o Nombre (sensible a mayúsculas/minúsculas)" required
+                            style="width: 80%; max-width: 350px;">
+                        <button type="submit" style="width: 50%; max-width: 200px;">Buscar</button>
+                        <p id="edit-content-search-error"
+                            style="color: red; display: none; text-align: center; margin-top: 1rem;"></p>
                     </form>
-                    <form id="edit-content-fields-form" style="display: none;">
-                        <label for="edit-content-new-name">Nuevo Nombre del Contenido</label>
-                        <input type="text" id="edit-content-new-name" name="nuevo_nombre"
-                            placeholder="Ingrese el nuevo nombre" required>
+                    <form id="edit-content-fields-form"
+                        style="display: none; grid-template-columns: 1fr 1fr; gap: 1.2rem; max-width: 500px; margin: 0 auto;">
+                        <div style="display: flex; flex-direction: column;">
+                            <label for="edit-content-nombre" style="font-weight: bold;">Nombre</label>
+                            <input type="text" id="edit-content-nombre" name="nombre" required>
+                            <p id="edit-content-duplicate-error"
+                                style="color: red; display: none; margin-top: 0.5rem; margin-bottom: 0;"></p>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label for="edit-content-descripcion" style="font-weight: bold;">Descripción</label>
+                            <textarea id="edit-content-descripcion" name="descripcion" maxlength="300" required
+                                style="resize: vertical; min-height: 40px;"></textarea>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label for="edit-content-precio" style="font-weight: bold;">Precio (Nuevos Soles)</label>
+                            <input type="number" id="edit-content-precio" name="precio" min="0" step="0.01" required>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label for="edit-content-autor" style="font-weight: bold;">Autor(es)</label>
+                            <input type="text" id="edit-content-autor" name="autor" required>
+                        </div>
+                        <div style="grid-column: 1 / -1; display: flex; justify-content: center;">
+                            <button type="submit" style="width: 60%; max-width: 220px;">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
 
-                        <label for="edit-content-author">Autor(es)</label>
-                        <input type="text" id="edit-content-author" name="autor"
-                            placeholder="Ingrese los autores separados por coma" required>
+                <!-- Formulario para Eliminar Contenido -->
+                <div id="delete-content-form" style="display: none;">
+                    <h3>Eliminar Contenido</h3>
+                    <form id="delete-content-search-form">
+                        <label for="delete-content-search" style="font-weight: bold;">Ingrese el ID o Nombre del
+                            contenido a eliminar</label>
+                        <input type="text" id="delete-content-search" name="busqueda"
+                            placeholder="ID o Nombre (sensible a mayúsculas/minúsculas)" required>
+                        <button type="submit">Buscar</button>
+                        <p id="delete-content-search-error"
+                            style="color: red; display: none; text-align: center; margin-top: 1rem;"></p>
+                    </form>
+                    <form id="delete-content-fields-form" style="display: none;">
+                        <label for="delete-content-nombre" style="font-weight: bold;">Nombre del Contenido</label>
+                        <input type="text" id="delete-content-nombre" disabled>
 
-                        <label for="edit-content-description">Descripción</label>
-                        <textarea id="edit-content-description" name="descripcion" placeholder="Ingrese una descripción"
-                            required></textarea>
+                        <label for="delete-content-autor" style="font-weight: bold;">Autor(es)</label>
+                        <input type="text" id="delete-content-autor" disabled>
 
-                        <label for="edit-content-price">Precio (Nuevos Soles)</label>
-                        <input type="number" id="edit-content-price" name="precio" placeholder="Ingrese el precio"
-                            min="0" step="0.01" required>
+                        <label for="delete-content-descripcion" style="font-weight: bold;">Descripción</label>
+                        <textarea id="delete-content-descripcion" disabled></textarea>
 
-                        <button type="submit">Guardar Cambios</button>
+                        <label for="delete-content-precio" style="font-weight: bold;">Precio (Nuevos Soles)</label>
+                        <input type="number" id="delete-content-precio" disabled>
+
+                        <button type="button" id="delete-content-confirm-btn" style="
+                background: #e74c3c;
+                color: #fff;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.8rem;
+                font-size: 1rem;
+                margin-top: 1rem;
+                width: 100%;
+                transition: background 0.3s;
+                cursor: pointer;
+            " onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">Eliminar
+                            Contenido</button>
                     </form>
                     <button class="back-button">Atrás</button>
                 </div>
 
-                <!-- Formulario para Eliminar Categoría -->
-                <div id="delete-content-form" style="display: none;">
-                    <h3>Eliminar Categoría</h3>
-                    <form>
-                        <label for="delete-content-name">Nombre de la Categoría</label>
-                        <input type="text" id="delete-content-name" placeholder="Ingrese el nombre de la categoría"
-                            required>
-
-                        <label for="parent-content">Categoría Padre</label>
-                        <input type="text" id="delete-parent-content"
-                            placeholder="Ingrese el nombre de la categoría padre" required>
-
-                        <button type="submit">Eliminar</button>
-                    </form>
-                    <button class="back-button">Atrás</button>
+                <!-- Modal de confirmación -->
+                <div id="delete-confirm-modal"
+                    style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
+                    <div
+                        style="background:#fff; padding:2rem 3rem; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                        <h2 style="color: #e74c3c;">¿Está seguro de eliminar este contenido?</h2>
+                        <p>El contenido será eliminado de la cuenta de los usuarios que lo posean y se les enviará una
+                            notificación de disculpa.</p>
+                        <button id="delete-confirm-yes"
+                            style="margin:1rem; background:#e74c3c; color:#fff;">Eliminar</button>
+                        <button id="delete-confirm-no" style="margin:1rem;">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+            <div id="success-modal"
+                style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
+                <div
+                    style="background:#fff; padding:2rem 3rem; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                    <h2 id="success-modal-message" style="color: #3c003c;">¡Operación exitosa!</h2>
+                    <button id="success-ok"
+                        style="margin-top:1.5rem; padding:0.7rem 2rem; border:none; border-radius:8px; background:#a66cff; color:#fff; font-size:1.1rem; font-weight:bold; cursor:pointer;">OK</button>
+                </div>
+            </div>
+            <div id="delete-confirm-modal"
+                style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
+                <div
+                    style="background:#fff; padding:2rem 3rem; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                    <h2 style="color: #e74c3c;">¿Está seguro de eliminar este contenido?</h2>
+                    <p>El contenido será eliminado de la cuenta de los usuarios que lo posean y se les enviará una
+                        notificación de disculpa.</p>
+                    <button id="delete-confirm-yes"
+                        style="margin:1rem; background:#e74c3c; color:#fff;">Eliminar</button>
+                    <button id="delete-confirm-no" style="margin:1rem;">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -486,10 +557,7 @@
             const formContainer = document.getElementById("form-container");
             const addContentForm = document.getElementById("add-content-form");
             const editContentForm = document.getElementById("edit-content-form");
-            const deleteContentForm = document.getElementById("delete-content-form");
             const contentTableBody = document.querySelector("#content-table tbody");
-            const editContentSearchForm = document.getElementById("edit-content-search-form");
-            const editContentFieldsForm = document.getElementById("edit-content-fields-form");
             const validateContentBtn = document.getElementById("validate-content-btn");
 
             // Botones principales
@@ -505,6 +573,8 @@
                 mainOptions.style.display = "none";
                 formContainer.style.display = "block";
                 addContentForm.style.display = "block";
+                editContentForm.style.display = "none";
+                deleteContentForm.style.display = "none";
             });
 
             // Mostrar solo el campo de búsqueda al abrir el formulario de editar contenido
@@ -543,12 +613,19 @@
             const contentCategorySelect = document.getElementById("content-category");
             const fileInput = document.getElementById("content-file");
             const fileErrorMessage = document.getElementById("file-error-message");
-
+            const successModal = document.getElementById("success-modal");
+            const successModalMessage = document.getElementById("success-modal-message");
+            const successOk = document.getElementById("success-ok");
+            successOk.addEventListener("click", () => {
+                successModal.style.display = "none";
+                formContainer.style.display = "none";
+                addContentForm.style.display = "none";
+                editContentForm.style.display = "none";
+                deleteContentForm.style.display = "none";
+                mainOptions.style.display = "block";
+                loadContents();
+            });
             // Agregar contenido
-
-            // Función para obtener todas las categorías hijas y subcategorías recursivamente
-            // ...dentro de DOMContentLoaded...
-
             async function obtenerCategoriasPorPadre(tipo) {
                 if (!tipo) {
                     contentCategorySelect.innerHTML = '<option value="">Seleccione una categoría</option>';
@@ -625,7 +702,7 @@
                 const extensionesPermitidas = ['jpg', 'jpeg', 'png', 'mp3', 'flac', 'wav', 'mp4'];
                 const mimesPermitidos = [
                     'image/jpeg', 'image/png',
-                    'sonido/mpeg', 'sonido/flac', 'sonido/wav',
+                    'audio/mpeg', 'audio/flac', 'audio/wav',
                     'video/mp4'
                 ];
 
@@ -648,10 +725,9 @@
                         body: formData
                     });
                     if (response.ok) {
-                        alert("Contenido agregado correctamente.");
+                        successModalMessage.textContent = "¡Contenido agregado correctamente!";
+                        successModal.style.display = "flex";
                         contentForm.reset();
-                        document.getElementById("form-container").style.display = "none";
-                        document.getElementById("main-options").style.display = "block";
                     } else {
                         const errorData = await response.json();
                         alert(errorData.error || "Error al agregar el contenido.");
@@ -661,57 +737,209 @@
                 }
             });
             // Editar contenido
-            const editContentFormElement = document.querySelector("#edit-content-form form");
-            editContentFormElement.addEventListener("submit", async (e) => {
+            const editContentFormDiv = document.getElementById("edit-content-form");
+            const editContentSearchForm = document.getElementById("edit-content-search-form");
+            const editContentFieldsForm = document.getElementById("edit-content-fields-form");
+            const editContentSearchInput = document.getElementById("edit-content-search");
+            const editContentSearchError = document.getElementById("edit-content-search-error");
+            const editContentNombre = document.getElementById("edit-content-nombre");
+            const editContentDescripcion = document.getElementById("edit-content-descripcion");
+            const editContentPrecio = document.getElementById("edit-content-precio");
+            const editContentAutor = document.getElementById("edit-content-autor");
+            const editContentDuplicateError = document.getElementById("edit-content-duplicate-error");
+
+            let contenidoIdActual = null;
+            let nombreOriginal = null;
+
+            // Mostrar formulario de búsqueda al editar
+            editContentButton.addEventListener("click", () => {
+                mainOptions.style.display = "none";
+                formContainer.style.display = "block";
+                addContentForm.style.display = "none";
+                editContentFormDiv.style.display = "block";
+                deleteContentForm.style.display = "none";
+                editContentSearchForm.reset();
+                editContentFieldsForm.reset();
+                editContentFieldsForm.style.display = "none";
+                editContentSearchError.style.display = "none";
+                editContentDuplicateError.style.display = "none";
+            });
+
+            // Buscar contenido por ID o nombre
+            editContentSearchForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
+                const busqueda = editContentSearchInput.value.trim();
+                editContentSearchError.style.display = "none";
+                editContentFieldsForm.style.display = "none";
+                editContentDuplicateError.style.display = "none";
+                if (!busqueda) return;
 
-                const currentName = document.getElementById("edit-content-name").value.trim();
-                const newName = document.getElementById("new-content-name").value.trim();
-                const parentContent = document.getElementById("new-parent-content").value.trim();
-
-                if (!currentName || !newName || !parentContent) {
-                    alert("Por favor, complete todos los campos.");
+                // Buscar por ID 
+                let contenido = null;
+                try {
+                    const res = await fetch(`/getContenidoUnique?busqueda=${encodeURIComponent(busqueda)}`);
+                    if (res.ok) {
+                        contenido = await res.json();
+                    }
+                } catch { }
+                if (!contenido || !contenido.id) {
+                    editContentSearchError.textContent = "No se encontró ningún contenido con ese ID.";
+                    editContentSearchError.style.display = "block";
                     return;
                 }
+                // Llenar campos
+                contenidoIdActual = contenido.id;
+                nombreOriginal = contenido.nombre;
+                editContentNombre.value = contenido.nombre;
+                editContentDescripcion.value = contenido.descripcion;
+                editContentPrecio.value = contenido.precio;
+                editContentAutor.value = contenido.autor;
+                editContentFieldsForm.style.display = "block";
+            });
 
+            // Validar nombre duplicado en tiempo real
+            editContentNombre.addEventListener("input", async () => {
+                const nuevoNombre = editContentNombre.value.trim();
+                editContentDuplicateError.style.display = "none";
+                if (!nuevoNombre) return;
+                if (nuevoNombre === nombreOriginal) {
+                    // Si el nombre no ha cambiado, no mostrar error
+                    editContentDuplicateError.style.display = "none";
+                    return;
+                }
+                // Verificar si ya existe otro contenido con ese nombre (que no sea el actual)
+                const data = await fetch(`/getContenidoUnique?busqueda=${encodeURIComponent(nuevoNombre)}`)
+                    .then(res => res.json());
+                const existe = data && data.id && data.id !== contenidoIdActual;
+                if (existe) {
+                    editContentDuplicateError.textContent = "Ya existe otro contenido con ese nombre. Corrija antes de guardar.";
+                    editContentDuplicateError.style.display = "block";
+                }
+            });
+
+            // Guardar cambios
+            editContentFieldsForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const nuevoNombre = editContentNombre.value.trim();
+                if (editContentDuplicateError.style.display === "block") return;
+                const descripcion = editContentDescripcion.value.trim();
+                const precio = editContentPrecio.value;
+                const autor = editContentAutor.value.trim();
+
+                // Enviar actualización
                 try {
-                    // Verificar si la categoría actual existe
-                    const currentExists = await verificarCategoria(currentName, parentContent);
-                    alert(currentExists);
-                    console.log(`La categoría "${currentName}" con padre "${parentContent}" existe: ${currentExists}`);
-                    if (!currentExists) {
-                        alert(`La categoría "${currentName}" con padre "${parentContent}" no existe.`);
-                        return;
-                    }
-
-                    // Verificar si el nuevo nombre ya existe
-                    const newNameExists = await verificarCategoria(newName, parentContent);
-                    if (newNameExists) {
-                        alert(`Ya existe una categoría con el nombre "${newName}" y padre "${parentContent}".`);
-                        return;
-                    }
-
-                    // Enviar solicitud para editar la categoría
-                    const response = await fetch('/editarCategoria', {
+                    const response = await fetch('/editarContenido', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ nombre_actual: currentName, nuevo_nombre: newName, categoria_padre: parentContent })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: contenidoIdActual,
+                            nombre: nuevoNombre,
+                            descripcion,
+                            precio,
+                            autor
+                        })
                     });
-
                     if (response.ok) {
-                        alert(`Categoría "${currentName}" editada correctamente a "${newName}".`);
-                        editContentFormElement.reset();
-                        formContainer.style.display = "none";
-                        mainOptions.style.display = "block";
+                        successModalMessage.textContent = "¡Contenido editado correctamente!";
+                        successModal.style.display = "flex";
                     } else {
                         const errorData = await response.json();
-                        alert(errorData.error || "Error al editar la categoría.");
+                        editContentDuplicateError.textContent = errorData.error || "Error al editar el contenido.";
+                        editContentDuplicateError.style.display = "block";
                     }
-                } catch (error) {
-                    console.error("Error al realizar la solicitud para editar la categoría:", error);
-                    alert("Ocurrió un error al editar la categoría.");
+                } catch {
+                    editContentDuplicateError.textContent = "Error al conectar con el servidor.";
+                    editContentDuplicateError.style.display = "block";
+                }
+            });
+
+            // Referencias
+            const deleteContentForm = document.getElementById("delete-content-form");
+            const deleteContentSearchForm = document.getElementById("delete-content-search-form");
+            const deleteContentFieldsForm = document.getElementById("delete-content-fields-form");
+            const deleteContentSearchInput = document.getElementById("delete-content-search");
+            const deleteContentSearchError = document.getElementById("delete-content-search-error");
+            const deleteContentNombre = document.getElementById("delete-content-nombre");
+            const deleteContentDescripcion = document.getElementById("delete-content-descripcion");
+            const deleteContentPrecio = document.getElementById("delete-content-precio");
+            const deleteContentAutor = document.getElementById("delete-content-autor");
+            const deleteContentConfirmBtn = document.getElementById("delete-content-confirm-btn");
+            const deleteConfirmModal = document.getElementById("delete-confirm-modal");
+            const deleteConfirmYes = document.getElementById("delete-confirm-yes");
+            const deleteConfirmNo = document.getElementById("delete-confirm-no");
+
+            let contenidoIdEliminar = null;
+
+            // Mostrar solo el campo de búsqueda al abrir el formulario de eliminar contenido
+            deleteContentButton.addEventListener("click", () => {
+                mainOptions.style.display = "none";
+                formContainer.style.display = "block";
+                addContentForm.style.display = "none";
+                editContentForm.style.display = "none";
+                deleteContentForm.style.display = "block";
+                deleteContentFieldsForm.style.display = "none";
+                deleteContentSearchForm.reset();
+                deleteContentFieldsForm.reset();
+                deleteContentSearchError.style.display = "none";
+            });
+
+            // Buscar contenido por ID o nombre
+            deleteContentSearchForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const busqueda = deleteContentSearchInput.value.trim();
+                deleteContentSearchError.style.display = "none";
+                deleteContentFieldsForm.style.display = "none";
+                if (!busqueda) return;
+
+                let contenido = null;
+                try {
+                    const res = await fetch(`/getContenidoUnique?busqueda=${encodeURIComponent(busqueda)}`);
+                    if (res.ok) contenido = await res.json();
+                } catch { }
+                if (!contenido || !contenido.id) {
+                    deleteContentSearchError.textContent = "No se encontró ningún contenido con ese ID o nombre.";
+                    deleteContentSearchError.style.display = "block";
+                    return;
+                }
+                // Llenar campos solo lectura
+                contenidoIdEliminar = contenido.id;
+                deleteContentNombre.value = contenido.nombre;
+                deleteContentDescripcion.value = contenido.descripcion;
+                deleteContentPrecio.value = contenido.precio;
+                deleteContentAutor.value = contenido.autor;
+                deleteContentFieldsForm.style.display = "block";
+            });
+
+            // Mostrar modal de confirmación al hacer clic en eliminar
+            deleteContentConfirmBtn.addEventListener("click", () => {
+                deleteConfirmModal.style.display = "flex";
+            });
+
+            // Cancelar eliminación
+            deleteConfirmNo.addEventListener("click", () => {
+                deleteConfirmModal.style.display = "none";
+            });
+
+            // Confirmar eliminación
+            deleteConfirmYes.addEventListener("click", async () => {
+                deleteConfirmModal.style.display = "none";
+                try {
+                    const response = await fetch('/eliminarContenido', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: contenidoIdEliminar })
+                    });
+                    if (response.ok) {
+                        successModalMessage.textContent = "¡Contenido eliminado correctamente!";
+                        successModal.style.display = "flex";
+                        deleteContentFieldsForm.style.display = "none";
+                        deleteContentSearchForm.reset();
+                        loadContents();
+                    } else {
+                        alert("Error al eliminar el contenido.");
+                    }
+                } catch {
+                    alert("Error al conectar con el servidor.");
                 }
             });
 

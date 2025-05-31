@@ -1,20 +1,181 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Inicio de sesión</title>
+    <style>
+        /* Reset y estilo base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #ede9fe; /* Color de fondo claro */
+        }
+
+        /* Contenedor general de la página, se divide en dos paneles */
+        .container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Panel izquierdo: login con fondo degradado */
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(to right, #A32FF4, #3e0a63); /* Degradado horizontal lila-azul */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Caja del formulario */
+        .login-box {
+            background: rgba(255, 255, 255, 0.15); /* Caja semi-transparente */
+            backdrop-filter: blur(10px); /* Efecto de desenfoque detrás */
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            color: white;
+            text-align: center;
+        }
+
+        /* Título del formulario */
+        .login-box h1 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        /* Grupo de entrada (icono + input) */
+        .input-group {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            border-radius: 30px;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Estilo del icono dentro del input */
+        .input-group i {
+            margin-right: 0.5rem;
+            color: #6b7280;
+        }
+
+        /* Estilo de los campos de texto */
+        .input-group input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        /* Enlace de "¿Olvidaste tu contraseña?" */
+        .login-box a {
+            font-size: 0.85rem;
+            color: #ddd6fe;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 1.2rem;
+            text-align: right;
+        }
+
+        /* Botón de iniciar sesión */
+        .login-box button {
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 30px;
+            background-color: #5b21b6;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        /* Hover del botón */
+        .login-box button:hover {
+            background-color: #4c1d95;
+        }
+
+        /* Línea de registro (en horizontal) */
+        .register {
+            margin-top: 1.2rem;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            color: #f3e8ff;
+        }
+
+        /* Estilo del link "Regístrate" */
+        .register a {
+            color: #ffffff;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        /* Panel derecho: imagen decorativa */
+        .right-panel {
+            flex: 1;
+            background-color: #ede9fe;
+        }
+
+        /* Imagen que ocupa todo el alto del panel derecho */
+        .right-panel img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <h1>Iniciar Sesión</h1>
-    <form action="/login" method="POST">
-        <label for="username">Usuario:</label>
-        <input type="text" id="username" name="username" required>
-        <br>
-        <label for="password">Contraseña:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <button type="submit">Ingresar</button>
-    </form>
+    <div class="container">
+        <!-- Panel izquierdo con el formulario -->
+        <div class="left-panel">
+            <form class="login-box" action="/login" method="POST">
+                <!-- Título con icono -->
+                <h1>👤 Inicio de sesión</h1>
+
+                <!-- Campo de usuario -->
+                <div class="input-group">
+                    <i>👤</i>
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+
+                <!-- Campo de contraseña -->
+                <div class="input-group">
+                    <i>🔒</i>
+                    <input type="password" name="password" placeholder="Contraseña" required>
+                </div>
+
+                <!-- Enlace de contraseña olvidada -->
+                <a href="#">¿Olvidaste tu contraseña?</a>
+
+                <!-- Botón de enviar -->
+                <button type="submit">Iniciar sesión</button>
+
+                <!-- Línea horizontal de registro -->
+                <div class="register">
+                    <span>¿No tienes una cuenta?</span>
+                    <a href="#">Regístrate</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Panel derecho con imagen de fondo -->
+        <div class="right-panel">
+            <img src="https://i.ibb.co/pvg40hN5/fauget-image.jpg" alt="fauget-image">
+        </div>
+    </div>
 </body>
 </html>

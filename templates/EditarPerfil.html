@@ -1,0 +1,300 @@
+<!-- templates/EditarPerfil.html -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editar Perfil</title>
+  <style>
+    /* Reset y fuente global */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* Fondo general */
+    body {
+      display: flex;
+      min-height: 100vh;
+      background-color: #f5f5ff;
+    }
+
+    /* Menú lateral izquierdo */
+    .sidebar {
+      width: 240px;
+      background-color: #0707A1; /* morado intenso */
+      color: white;
+      padding: 30px 20px;
+    }
+
+    .sidebar h1 {
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar ul li {
+      margin: 1rem 0;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .sidebar ul li a {
+      color: white;
+      text-decoration: none;
+    }
+
+    /* Contenido principal */
+    .main {
+      flex: 1;
+      padding: 20px;
+      background-color: #fafafa;
+    }
+
+    /* Barra superior: búsqueda y usuario */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .search-bar input {
+      padding: 10px 20px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Contenedor del formulario */
+    .form-container {
+      max-width: 500px;
+      margin: auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container h2 {
+      margin-bottom: 20px;
+      color: #4c1d95;
+      text-align: center;
+    }
+
+    .campo {
+      margin-bottom: 15px;
+    }
+
+    .campo label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .campo input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .btn-submit {
+      display: block;
+      width: 100%;
+      background-color: #7c3aed;
+      color: white;
+      padding: 10px 0;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+      background-color: #5b21b6;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Menú lateral izquierdo -->
+  <div class="sidebar">
+    <h1>Fauget</h1>
+    <ul>
+      <li><a href="/ClientePaginaPrincipal">Inicio</a></li>
+      <li>Categorías</li>
+      <li>Promociones</li>
+      <li>Notificaciones</li>
+      <li>Historial de descargas</li>
+      <li>My Playlist</li>
+      <li><a href="/Perfil">Mi Perfil</a></li>
+      <li>Configuración</li>
+    </ul>
+  </div>
+
+  <!-- Panel principal -->
+  <div class="main">
+    <!-- Barra superior -->
+    <div class="top-bar">
+      <div class="search-bar">
+        <input type="text" placeholder="Buscar contenido..." />
+      </div>
+      <div class="user-info">
+        <span>Cliente Usuario</span>
+        <img src="https://i.ibb.co/YTjW3vF/user.jpg" alt="Usuario">
+      </div>
+    </div>
+
+    <!-- Contenedor del formulario de editar perfil -->
+    <div class="form-container">
+      <h2>Editar Perfil</h2>
+      <form action="/actualizarPerfil" method="POST" id="form-editar">
+        <!-- Campo oculto con idCliente (reemplaza "1" por el ID real dinámicamente) -->
+        <input
+          type="hidden"
+          name="idCliente"
+          id="input-idCliente"
+          value="1"
+        />
+
+        <div class="campo">
+          <label for="input-nombre">Nombre completo:</label>
+          <input
+            type="text"
+            id="input-nombre"
+            name="nombre"
+            required
+            placeholder="Escribe tu nombre completo"
+          />
+        </div>
+
+        <div class="campo">
+          <label for="input-correo">Correo electrónico:</label>
+          <input
+            type="email"
+            id="input-correo"
+            name="correo"
+            required
+            placeholder="usuario@ejemplo.com"
+          />
+        </div>
+
+        <div class="campo">
+          <label for="input-nueva-contrasena">Nueva contraseña (opcional):</label>
+          <input
+            type="password"
+            id="input-nueva-contrasena"
+            name="nueva_contrasena"
+            placeholder="Deja vacío si no cambia"
+          />
+        </div>
+
+        <div class="campo">
+          <label for="input-contrasena-anterior">Contraseña anterior:</label>
+          <input
+            type="password"
+            id="input-contrasena-anterior"
+            name="contrasena_anterior"
+            required
+            placeholder="Ingresa tu contraseña actual"
+          />
+        </div>
+
+        <button type="submit" class="btn-submit">Aplicar cambios</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  // Obtener idCliente de la URL
+  function getIdCliente() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('idCliente') || '1';
+  }
+
+  // Llenar el formulario con los datos del cliente
+  function cargarDatosPerfil() {
+    const idCliente = getIdCliente();
+    fetch(`/getPerfil?idCliente=${idCliente}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("No se pudo cargar el perfil: " + data.error);
+          return;
+        }
+        document.getElementById('input-idCliente').value = idCliente;
+        document.getElementById('input-nombre').value = data.nombre || '';
+        document.getElementById('input-correo').value = data.correo || '';
+        // Si tienes username o saldo, puedes agregarlos aquí
+      })
+      .catch(err => {
+        alert("Error al cargar perfil");
+        console.error(err);
+      });
+  }
+
+  // Enviar el formulario por AJAX
+  document.addEventListener('DOMContentLoaded', function () {
+    cargarDatosPerfil();
+
+    document.getElementById('form-editar').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      // Usar URLSearchParams para enviar los datos como application/x-www-form-urlencoded
+      const formData = new URLSearchParams();
+      formData.append('idCliente', document.getElementById('input-idCliente').value);
+      formData.append('nombre', document.getElementById('input-nombre').value);
+      formData.append('correo', document.getElementById('input-correo').value);
+      formData.append('nueva_contrasena', document.getElementById('input-nueva-contrasena').value);
+      formData.append('contrasena_anterior', document.getElementById('input-contrasena-anterior').value);
+
+      fetch('/actualizarPerfil', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+      })
+      .then(res => {
+        if (res.status === 302) {
+          // Redirección por éxito
+          window.location.href = res.headers.get('Location');
+          return;
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.error) {
+          alert("Error: " + data.error);
+        }
+      })
+      .catch(err => {
+        alert("Error al actualizar perfil");
+        console.error(err);
+      });
+    });
+  });
+  </script>
+</body>
+</html>
