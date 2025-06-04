@@ -94,6 +94,7 @@ class Manejador(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(perfil).encode('utf-8'))
             return
+
         ############################
         ### GESTIONAR CATEGORIAS ###
         ############################
@@ -101,44 +102,39 @@ class Manejador(BaseHTTPRequestHandler):
             self.serve_page('AdminGestorCategorias.html')
             return
         
+        # --- ENDPOINT: Verificar existencia de categoría ---
         if self.path.startswith('/verificarCategoria'):
             query = parse_qs(urlparse(self.path).query)
             nombre = query.get('nombre', [None])[0]
             padre = query.get('padre', [None])[0]
-            resultado = verificar_categoria_externa(nombre, padre)
+            resultado = GestorCategorias.verificar_categoria_externa(nombre, padre)
             self.send_response(resultado['status'])
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(resultado['data']).encode('utf-8'))
             return
         
+        # --- ENDPOINT: Obtener categorías hijas segun un padre ---
         if self.path.startswith('/getCategoriasHijas'):
             query = parse_qs(urlparse(self.path).query)
             padre = query.get('padre', [''])[0]
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                cursor.execute("SELECT nombre FROM TablaCategorias WHERE categoria_padre = %s", (padre,))
-                categorias = cursor.fetchall()
+            categorias = GestorCategorias.obtener_categorias_hijas(padre)
+            if categorias is not None:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(categorias).encode('utf-8'))
-            except Exception as e:
+            else:
                 self.send_response(500)
                 self.end_headers()
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
             return
         
+        # --- ENDPOINT: Obtener conjunto de categorías ---
         if self.path.startswith('/getCategorias'):
-            print("Ruta /getCategorias detectada")  # Depuración
             query = parse_qs(urlparse(self.path).query)
             filter_parent = query.get('filter', [''])[0]
             sort = query.get('sort', ['false'])[0] == 'true'
-            print(f"Parámetros recibidos: filter={filter_parent}, sort={sort}") 
-            categorias = obtener_categorias(filter_parent, sort)
+            categorias = GestorCategorias.obtener_categorias(filter_parent, sort)
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
@@ -148,274 +144,192 @@ class Manejador(BaseHTTPRequestHandler):
         ############################
         ### GESTIONAR CONTENIDOS ###
         ############################
+
+        if path == '/AdminGestorContenido':
+            self.serve_page('AdminGestorContenido.html')
+            return
+        
+        # --- ENDPOINT: Verificar existencia de contenido ---
         if self.path.startswith('/existeContenido'):
             query = parse_qs(urlparse(self.path).query)
             nombre = query.get('nombre', [''])[0]
-            existe = existe_contenido(nombre)
+            existe = GestorContenido.existe_contenido(nombre)
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'existe': existe}).encode('utf-8'))
             return
-        if path == '/AdminGestorContenido':
-            self.serve_page('AdminGestorContenido.html')
-            return
 
+        # --- ENDPOINT: Obtener contenido por ID ---
         if self.path.startswith('/getContenidoUnique'):
             query = parse_qs(urlparse(self.path).query)
             busqueda = query.get('busqueda', [''])[0]
-            contenido = obtener_contenido_unique(busqueda)
+            contenido = GestorContenido.obtener_contenido_unique(busqueda)
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(contenido if contenido else {}).encode('utf-8'))
             return
         
-        if self.path.startswith('/getContenidos'): # Informacion TablaContenidos
-            contenidos = obtener_contenidos()
+        # --- ENDPOINT: Obtener conjunto de contenidos ---
+        if self.path.startswith('/getContenidos'):
+            contenidos = GestorContenido.obtener_contenidos()
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(contenidos).encode('utf-8'))
             return
         
-        #########################
-        # GESTIONAR PROMOCIONES #
-        #########################
+        #############################
+        ### GESTIONAR PROMOCIONES ###
+        #############################
+
         if path == '/AdminGestorPromociones':
             self.serve_page('AdminGestorPromociones.html')
             return
         
+        # --- ENDPOINT: Conseguir una promoción por ID ---
         if self.path.startswith('/proGetPromocionById'):
-            print("[DEBUG] Entrando a /proGetPromocionById")
             query = parse_qs(urlparse(self.path).query)
             promo_id = query.get('id', [''])[0]
-            print(f"[DEBUG] promo_id recibido: {promo_id}")
             try:
                 promo_id = int(promo_id)
-                print(f"[DEBUG] promo_id convertido a int: {promo_id}")
             except (ValueError, TypeError):
-                print("[DEBUG] promo_id inválido")
                 self.send_response(400)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': 'ID inválido.'}).encode('utf-8'))
                 return
-            try:
-                print("[DEBUG] Conectando a la base de datos")
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                print("[DEBUG] Ejecutando SELECT de promoción")
-                cursor.execute("SELECT id, nombre, descripcion, fecha_inicio, fecha_fin, porcentaje FROM TablaPromocion WHERE id = %s", (promo_id,))
-                promo = cursor.fetchone()
-                print(f"[DEBUG] Resultado de SELECT: {promo}")
-                if promo:
-                    # Convertir fechas a string para evitar error de serialización
-                    if isinstance(promo['fecha_inicio'], (datetime.date, datetime.datetime)):
-                        promo['fecha_inicio'] = promo['fecha_inicio'].isoformat()
-                    if isinstance(promo['fecha_fin'], (datetime.date, datetime.datetime)):
-                        promo['fecha_fin'] = promo['fecha_fin'].isoformat()
-                    if isinstance(promo['porcentaje'], decimal.Decimal):
-                        promo['porcentaje'] = float(promo['porcentaje'])  # <-- Solución aquí
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    print(f"[DEBUG] Promoción encontrada: {promo}")
-                    self.wfile.write(json.dumps(promo).encode('utf-8'))
-                    return
-                else:
-                    print("[DEBUG] Promoción no encontrada")
-                    self.send_response(404)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Promoción no encontrada.'}).encode('utf-8'))
-                    return
-            except Exception as e:
-                print(f"[DEBUG] Excepción: {e}")
-                self.send_response(500)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-                return
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
-        
-        if self.path.startswith('/proGetPromocionByNombre'):
-            query = parse_qs(urlparse(self.path).query)
-            nombre = query.get('nombre', [''])[0]
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                cursor.execute("SELECT id, nombre, descripcion, fecha_inicio, fecha_fin, porcentaje FROM TablaPromocion WHERE id = %s", (promo_id,))                
-                promo = cursor.fetchone()
-                if promo:
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps(promo).encode('utf-8'))
-                else:
-                    self.send_response(404)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Promoción no encontrada.'}).encode('utf-8'))
-            except Exception as e:
-                self.send_response(500)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
-            return
-        
-        if self.path.startswith('/getPromociones'):
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                cursor.execute("""
-                    SELECT id, nombre, descripcion, porcentaje, fecha_inicio, fecha_fin
-                    FROM TablaPromocion
-                """)
-                promociones = cursor.fetchall()
+
+            promo = GestorPromociones.obtener_promocion_por_id(promo_id)
+            if promo:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps(promociones, default=str).encode('utf-8'))
-            except Exception as e:
+                self.wfile.write(json.dumps(promo).encode('utf-8'))
+            else:
+                self.send_response(404)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Promoción no encontrada.'}).encode('utf-8'))
+            return
+        
+        # --- ENDPOINT: Conseguir una promoción por nombre ---
+        if self.path.startswith('/proGetPromocionByNombre'):
+            query = parse_qs(urlparse(self.path).query)
+            nombre = query.get('nombre', [''])[0]
+            promo = GestorPromociones.obtener_promocion_por_nombre(nombre)
+            if promo:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(promo).encode('utf-8'))
+            else:
+                self.send_response(404)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Promoción no encontrada.'}).encode('utf-8'))
+            return
+        
+        # --- ENDPOINT: Obtener todas las promociones ---
+        if self.path.startswith('/getPromociones'):
+            promociones = GestorPromociones.obtener_promociones()
+            if promociones is not None:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(promociones).encode('utf-8'))
+            else:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': 'Error al obtener promociones.'}).encode('utf-8'))
             return
 
-        
+        # --- ENDPOINT: Obtener promociones activas por autor ---
         if self.path.startswith('/promoGetAutores'):
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor()
-                cursor.execute("SELECT DISTINCT autor FROM TablaContenido")
-                autores = [ {'autor': row[0]} for row in cursor.fetchall() ]
+            autores = GestorPromociones.obtener_autores()
+            if autores is not None:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(autores).encode('utf-8'))
-            except Exception as e:
+            else:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': 'Error al obtener autores.'}).encode('utf-8'))
             return
-
-        # --- ENDPOINT: Obtener categorías ---
+        
+        # --- ENDPOINT: Obtener categorías para promociones ---
         if self.path.startswith('/promoGetCategorias'):
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor()
-                cursor.execute("SELECT nombre FROM TablaCategorias")
-                categorias = [ {'nombre': row[0]} for row in cursor.fetchall() ]
+            categorias = GestorPromociones.obtener_categorias()
+            if categorias is not None:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(categorias).encode('utf-8'))
-            except Exception as e:
+            else:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': 'Error al obtener categorías.'}).encode('utf-8'))
             return
 
-        # --- ENDPOINT: Obtener contenidos por autor ---
+        # --- ENDPOINT: Obtener contenidos por autor y promociones---
         if self.path.startswith('/promoGetContenidosPorAutor'):
             query = parse_qs(urlparse(self.path).query)
             autor = query.get('autor', [''])[0]
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                cursor.execute("SELECT id, nombre, autor FROM TablaContenido WHERE autor = %s", (autor,))
-                contenidos = cursor.fetchall()
+            contenidos = GestorPromociones.obtener_contenidos_por_autor(autor)
+            if contenidos is not None:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(contenidos).encode('utf-8'))
-            except Exception as e:
+            else:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': 'Error al obtener contenidos.'}).encode('utf-8'))
             return
-
+        
         # --- ENDPOINT: Obtener contenidos por categoría y subcategorías ---
         if self.path.startswith('/promoGetContenidosPorCategoria'):
             query = parse_qs(urlparse(self.path).query)
             categoria = query.get('categoria', [''])[0]
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-
-                # Función recursiva para obtener todas las subcategorías
-                def obtener_subcategorias(cat):
-                    cursor.execute("SELECT nombre FROM TablaCategorias WHERE categoria_padre = %s", (cat,))
-                    hijas = [row['nombre'] for row in cursor.fetchall()]
-                    todas = []
-                    for hija in hijas:
-                        todas.append(hija)
-                        todas += obtener_subcategorias(hija)
-                    return todas
-
-                categorias = [categoria] + obtener_subcategorias(categoria)
-                formato = ','.join(['%s'] * len(categorias))
-                cursor.execute(f"SELECT id, nombre, autor FROM TablaContenido WHERE categoria IN ({formato})", tuple(categorias))
-                contenidos = cursor.fetchall()
+            contenidos = GestorPromociones.obtener_contenidos_por_categoria_y_subcategorias(categoria)
+            if contenidos is not None:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(contenidos).encode('utf-8'))
-            except Exception as e:
+            else:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': 'Error al obtener contenidos.'}).encode('utf-8'))
             return
+        
+        # --- ENDPOINT: Obtener contenidos por promoción ---
         if self.path.startswith('/promGetContenidosPorPromocion'):
             query = parse_qs(urlparse(self.path).query)
             promo_id = query.get('id', [''])[0]
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                cursor.execute("SELECT nombre, autor FROM TablaContenido WHERE promocion_id = %s", (promo_id,))
-                contenidos = cursor.fetchall()
+            contenidos = GestorPromociones.obtener_contenidos_por_promocion(promo_id)
+            if contenidos is not None:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(contenidos).encode('utf-8'))
-            except Exception as e:
+            else:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': 'Error al obtener contenidos.'}).encode('utf-8'))
             return
-        ################
-        # CARGAR SALDO #
-        ################
+        
+        ####################
+        ### CARGAR SALDO ###
+        ####################
         if path == '/CargarSaldo':
             self.serve_page('CargarSaldo.html')
             return
@@ -575,14 +489,15 @@ class Manejador(BaseHTTPRequestHandler):
                     conexion.close()
             return
         
+        ############################
+        ### GESTIONAR CATEGORIAS ###
+        ############################
+        
         elif self.path == '/agregarCategoria':
             content_length = int(self.headers['Content-Length'])
             post_data = json.loads(self.rfile.read(content_length))
-
             nombre = post_data.get('nombre')
             categoria_padre = post_data.get('categoria_padre')
-
-            print(f"Datos recibidos: nombre={nombre}, categoria_padre={categoria_padre}")  # Depuración
 
             if not nombre or not categoria_padre:
                 self.send_response(400)
@@ -591,103 +506,40 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'Faltan parámetros'}).encode('utf-8'))
                 return
 
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor()
-
-                # Verificar si la categoría padre existe
-                print(f"Datos recibidos: nombre={nombre}, categoria_padre={categoria_padre}")  # Depuración
-                cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE categoria_padre = %s OR nombre = %s", (categoria_padre, categoria_padre))
-                result = cursor.fetchone()
-                print(f"Resultado de la consulta: {result[0]}")
-
-                if result is None or result[0] == 0:
-                    parent_exists = False
-                else:
-                    parent_exists = result[0] > 0
-
-                print(f"¿Existe la categoría padre? {parent_exists}")  # Depuración
-
-                if not parent_exists:
-                    self.send_response(400)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'La categoría padre no existe.'}).encode('utf-8'))
-                    return
-
-                # Verificar si ya existe una fila con el mismo nombre y categoría padre
-                cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
-                result = cursor.fetchone()
-                print(f"Resultado de la consulta para nombre y categoría padre: {result}")  # Depuración
-
-                if result is not None and result[0] > 0:
-                    self.send_response(400)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'La categoría con este nombre y categoría padre ya existe.'}).encode('utf-8'))
-                    return
-                
-                # Insertar la nueva categoría
-                cursor.execute("INSERT INTO TablaCategorias (nombre, categoria_padre) VALUES (%s, %s)", (nombre, categoria_padre))
-                conexion.commit()
-
+            resultado = GestorCategorias.agregar_categoria({'nombre': nombre, 'categoria_padre': categoria_padre})
+            if resultado['ok']:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'mensaje': 'Categoría agregada correctamente.'}).encode('utf-8'))
-            except mysql.connector.Error as err:
-                self.send_response(500)
+                self.wfile.write(json.dumps({'mensaje': resultado['mensaje']}).encode('utf-8'))
+            else:
+                self.send_response(400)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(err)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
+            return
 
         elif self.path == '/eliminarCategoria':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
-            print(f"Datos recibidos en el servidor: {post_data}")  # Depuración
             data = json.loads(post_data)
 
             nombre = data.get('nombre')
             categoria_padre = data.get('categoria_padre')
 
-            print(f"Nombre: {nombre}, Categoría Padre: {categoria_padre}")  # Depuración
-
-            if not nombre or not categoria_padre:
+            resultado = GestorCategorias.eliminar_categoria({'nombre': nombre, 'categoria_padre': categoria_padre})
+            if resultado['ok']:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'mensaje': resultado['mensaje']}).encode('utf-8'))
+            else:
                 self.send_response(400)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Faltan parámetros'}).encode('utf-8'))
-                return
-            
-            # Verificar si la categoría padre es ROOT
-            if categoria_padre.upper() == "ROOT":
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'No se puede eliminar una categoría ROOT.'}).encode('utf-8'))
-                return
-
-            try:
-                resultado = GestorCategorias.eliminar_categoria({'nombre': nombre, 'categoria_padre': categoria_padre})
-                if resultado:
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'mensaje': 'Categoría eliminada correctamente'}).encode('utf-8'))
-                else:
-                    self.send_response(500)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Error al eliminar la categoría'}).encode('utf-8'))
-            except Exception as e:
-                self.send_response(500)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-    
+                self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
+            return
+        
         elif self.path == '/editarCategoria':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -703,24 +555,23 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'Faltan parámetros'}).encode('utf-8'))
                 return
 
-            try:
-                resultado = GestorCategorias.editar_categoria({'nombre_actual': nombre_actual, 'nuevo_nombre': nuevo_nombre})
-                if resultado:
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'mensaje': 'Categoría editada correctamente'}).encode('utf-8'))
-                else:
-                    self.send_response(500)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Error al editar la categoría'}).encode('utf-8'))
-            except Exception as e:
-                self.send_response(500)
+            resultado = GestorCategorias.editar_categoria({'nombre_actual': nombre_actual, 'nuevo_nombre': nuevo_nombre})
+            if resultado['ok']:
+                self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
+                self.wfile.write(json.dumps({'mensaje': resultado['mensaje']}).encode('utf-8'))
+            else:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
+            return
         
+        ############################
+        ### GESTIONAR CONTENIDOS ###
+        ############################
+
         elif self.path == '/agregarContenido':
             content_length = int(self.headers['Content-Length'])
             content_type = self.headers.get('Content-Type', '')
@@ -755,7 +606,7 @@ class Manejador(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({'error': 'Faltan campos obligatorios'}).encode('utf-8'))
                     return
-                # ...dentro de do_POST, antes de llamar a GestorContenido.agregar_contenido
+                
                 extensiones_permitidas = ['jpg', 'jpeg', 'png', 'mp3', 'flac', 'wav', 'mp4']
                 mimes_permitidos = [
                     'image/jpeg', 'image/png',
@@ -786,7 +637,6 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'Tipo de contenido no soportado.'}).encode('utf-8'))
 
         elif self.path.startswith('/getContenido'):
-            # Buscar contenido por ID o nombre (case sensitive)
             query = parse_qs(urlparse(self.path).query)
             busqueda = query.get('busqueda', [''])[0]
             try:
@@ -843,7 +693,7 @@ class Manejador(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({'error': 'Ya existe otro contenido con ese nombre.'}).encode('utf-8'))
                     return
-                # Actualizar el contenido
+                
                 cursor.execute("UPDATE TablaContenido SET nombre = %s, descripcion = %s, precio = %s, autor = %s WHERE id = %s", (nuevo_nombre, descripcion, precio, autor, contenido_id))
                 conexion.commit()
                 self.send_response(200)
