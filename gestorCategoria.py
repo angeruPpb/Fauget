@@ -1,7 +1,9 @@
 import mysql.connector
 from gestorConfig import DB_CONFIG
+
 '''
-Objeto gestor categorias OG18 modifica la tabla categorias OE14 y la tabla contenidos OE07
+Gestor de Categorías (OG18)
+Modifica las tablas TablaCategorias (OE14) y TablaContenidos (OE07)
 Funciones:
 - agregar_categoria(data): Agrega una nueva categoría a la base de datos.
 - eliminar_categoria(data): Elimina una categoría y reasigna sus contenidos a la categoría padre.
@@ -11,8 +13,8 @@ Funciones:
 - obtener_categorias(filter_parent='', sort=False): Obtiene una lista de categorías, opcionalmente filtradas por padre y ordenadas por nombre.
 - obtener_categorias_hijas(padre): Obtiene las categorías hijas de una categoría dada.
 '''
-class GestorCategorias: 
 
+class GestorCategorias: 
     @staticmethod
     def agregar_categoria(data):
         nombre = data['nombre']

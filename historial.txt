@@ -15,76 +15,12 @@ CREATE DATABASE proyecto
     DEFAULT CHARACTER SET = 'utf8mb4'
     COLLATE = 'utf8mb4_general_ci';
 
-CREATE TABLE proyecto.TablaUsuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username_ VARCHAR(255) NOT NULL,
-    password_ VARCHAR(255) NOT NULL
-);
+--- Comandos Git ---
+git init
+git add .
+git commit -m "message"
+git push
 
-INSERT INTO proyecto.TablaUsuarios (username_, password_)
-VALUES ('admin', '1234');
-
-
-CREATE TABLE proyecto.TablaCategorias (
-    id INT AUTO_INCREMENT PRIMARY KEY, -- Identificador único para cada categoría
-    nombre VARCHAR(255) NOT NULL,      -- Nombre de la categoría
-    categoria_padre VARCHAR(255) NOT NULL 
-);
-
--- Categorías raíz
-INSERT INTO proyecto.TablaCategorias (nombre, categoria_padre) VALUES
-('video', 'ROOT'),
-('imagen', 'ROOT'),
-('sonido', 'ROOT'),
-
--- Subcategorías de video
-('Películas', 'video'),
-('Documentales', 'video'),
-('Animación', 'video'),
-
--- Subcategorías de imagen
-('Fotografía de Naturaleza', 'imagen'),
-('Retratos', 'imagen'),
-('Paisajes', 'imagen'),
-
--- Subcategorías de sonido
-('Rock', 'sonido'),
-('Clásica', 'sonido'),
-('Jazz', 'sonido'),
-
--- Sub-subcategorías de Películas
-('Películas de Acción', 'Películas'),
-('Películas de Comedia', 'Películas'),
-
--- Sub-subcategorías de Documentales
-('Naturaleza Salvaje', 'Documentales'),
-('Historia del Mundo', 'Documentales'),
-
--- Sub-subcategorías de Animación
-('Animación 2D', 'Animación'),
-('Animación 3D', 'Animación'),
-
--- Sub-subcategorías de Fotografía de Naturaleza
-('Aves', 'Fotografía de Naturaleza'),
-('Bosques', 'Fotografía de Naturaleza'),
-
--- Sub-subcategorías de Retratos
-('Retratos en Blanco y Negro', 'Retratos'),
-('Retratos de Estudio', 'Retratos'),
-
--- Sub-subcategorías de Paisajes
-('Montañas', 'Paisajes'),
-('Playas', 'Paisajes'),
-
--- Sub-subcategorías de Rock
-('Rock Clásico', 'Rock'),
-('Rock Alternativo', 'Rock'),
-
--- Sub-subcategorías de Clásica
-('Barroco', 'Clásica'),
-('Romántico', 'Clásica'),
-
--- Sub-subcategorías de Jazz
-('Smooth Jazz', 'Jazz'),
-('Jazz Bebop', 'Jazz');
-
+git reset --hard HEAD
+git clean -fd
+git pull origini main

@@ -12,9 +12,6 @@ from gestorPromocion import *
 from gestorPerfil import *
 from urllib.parse import urlparse, parse_qs
 
-# Configuración de XAMPP (usuario root sin contraseña por defecto)
-
-
 class Manejador(BaseHTTPRequestHandler):
     RUTAS = {
         '/': 'login.html',
@@ -98,6 +95,7 @@ class Manejador(BaseHTTPRequestHandler):
         ############################
         ### GESTIONAR CATEGORIAS ###
         ############################
+
         if path == '/AdminGestorCategorias':
             self.serve_page('AdminGestorCategorias.html')
             return
@@ -493,6 +491,7 @@ class Manejador(BaseHTTPRequestHandler):
         ### GESTIONAR CATEGORIAS ###
         ############################
         
+        # --- ENDPOINT: Agregar Categoría ---
         elif self.path == '/agregarCategoria':
             content_length = int(self.headers['Content-Length'])
             post_data = json.loads(self.rfile.read(content_length))
@@ -519,6 +518,7 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
             return
 
+        # --- ENDPOINT: Eliminar Categoría ---
         elif self.path == '/eliminarCategoria':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -540,6 +540,7 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
             return
         
+        # --- ENDPOINT: Editar Categoría ---
         elif self.path == '/editarCategoria':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -572,12 +573,12 @@ class Manejador(BaseHTTPRequestHandler):
         ### GESTIONAR CONTENIDOS ###
         ############################
 
+        # --- ENDPOINT: Agregar Contenido ---
         elif self.path == '/agregarContenido':
             content_length = int(self.headers['Content-Length'])
             content_type = self.headers.get('Content-Type', '')
 
             if 'multipart/form-data' in content_type:
-                # Parsear multipart/form-data
                 import cgi
                 env = {'REQUEST_METHOD': 'POST'}
                 fs = cgi.FieldStorage(
@@ -586,7 +587,6 @@ class Manejador(BaseHTTPRequestHandler):
                     environ=env,
                     keep_blank_values=True
                 )
-
                 data = {
                     'nombre': fs.getvalue('nombre'),
                     'autor': fs.getvalue('autor'),
@@ -606,7 +606,7 @@ class Manejador(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({'error': 'Faltan campos obligatorios'}).encode('utf-8'))
                     return
-                
+                # Testear subiendo todos los tipos de archivos
                 extensiones_permitidas = ['jpg', 'jpeg', 'png', 'mp3', 'flac', 'wav', 'mp4']
                 mimes_permitidos = [
                     'image/jpeg', 'image/png',
@@ -636,37 +636,24 @@ class Manejador(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': 'Tipo de contenido no soportado.'}).encode('utf-8'))
 
+        # --- ENDPOINT: Obtener contenido por ID o nombre ---
         elif self.path.startswith('/getContenido'):
             query = parse_qs(urlparse(self.path).query)
             busqueda = query.get('busqueda', [''])[0]
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                if busqueda.isdigit():
-                    cursor.execute("SELECT * FROM TablaContenido WHERE id = %s", (busqueda,))
-                else:
-                    cursor.execute("SELECT * FROM TablaContenido WHERE nombre = %s", (busqueda,))
-                contenido = cursor.fetchone()
-                if contenido:
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps(contenido).encode('utf-8'))
-                else:
-                    self.send_response(404)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'No se encontró el contenido.'}).encode('utf-8'))
-            except Exception as e:
-                self.send_response(500)
+            contenido = GestorContenido.obtener_contenido(busqueda)
+            if contenido:
+                self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps(contenido).encode('utf-8'))
+            else:
+                self.send_response(404)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'No se encontró el contenido.'}).encode('utf-8'))
             return
 
+        # --- ENDPOINT: Editar Contenido ---
         elif self.path == '/editarContenido':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -682,81 +669,44 @@ class Manejador(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': 'Faltan parámetros'}).encode('utf-8'))
                 return
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                cursor.execute("SELECT id FROM TablaContenido WHERE nombre = %s AND id != %s", (nuevo_nombre, contenido_id))
-                duplicado = cursor.fetchone()
-                if duplicado:
-                    self.send_response(400)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Ya existe otro contenido con ese nombre.'}).encode('utf-8'))
-                    return
-                
-                cursor.execute("UPDATE TablaContenido SET nombre = %s, descripcion = %s, precio = %s, autor = %s WHERE id = %s", (nuevo_nombre, descripcion, precio, autor, contenido_id))
-                conexion.commit()
+
+            resultado = GestorContenido.editar_contenido(contenido_id, nuevo_nombre, descripcion, precio, autor)
+            if resultado['ok']:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'mensaje': 'Contenido editado correctamente.'}).encode('utf-8'))
-            except Exception as e:
-                self.send_response(500)
+                self.wfile.write(json.dumps({'mensaje': resultado['mensaje']}).encode('utf-8'))
+            else:
+                self.send_response(400)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
             return
         
+        # --- ENDPOINT: Eliminar Contenido ---
         elif self.path == '/eliminarContenido':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data)
             contenido_id = data.get('id')
-            try:
-                conexion = mysql.connector.connect(**DB_CONFIG)
-                cursor = conexion.cursor(dictionary=True)
-                # Obtener nombre del contenido
-                cursor.execute("SELECT nombre FROM TablaContenido WHERE id = %s", (contenido_id,))
-                row = cursor.fetchone()
-                if not row:
-                    self.send_response(404)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Contenido no encontrado.'}).encode('utf-8'))
-                    return
-                nombre_contenido = row['nombre']
-
-                # Buscar todos los usuarios que tengan el contenido
-                cursor.execute("SELECT usuario_id FROM ContenidoCliente WHERE contenido_id = %s", (contenido_id,))
-                usuarios = cursor.fetchall()
-                for usuario in usuarios:
-                    mensaje = f"Lamentamos informarle que el contenido '{nombre_contenido}' ha sido retirado de la plataforma. Disculpe las molestias."
-                    cursor.execute(
-                        "INSERT INTO Notificacion (usuario_id, emisor, mensaje) VALUES (%s, %s, %s)",
-                        (usuario['usuario_id'], 'Sistema', mensaje)
-                    )
-                # Eliminar el contenido de la tabla de los usuarios
-                cursor.execute("DELETE FROM ContenidoCliente WHERE contenido_id = %s", (contenido_id,))
-                # Eliminar el contenido de la plataforma
-                cursor.execute("DELETE FROM TablaContenido WHERE id = %s", (contenido_id,))
-                conexion.commit()
+            resultado = GestorContenido.eliminar_contenido(contenido_id)
+            if resultado['ok']:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'mensaje': 'Contenido eliminado correctamente.'}).encode('utf-8'))
-            except Exception as e:
-                self.send_response(500)
+                self.wfile.write(json.dumps({'mensaje': resultado['mensaje']}).encode('utf-8'))
+            else:
+                self.send_response(404 if resultado['error'] == 'Contenido no encontrado.' else 500)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-            finally:
-                if 'cursor' in locals(): cursor.close()
-                if 'conexion' in locals(): conexion.close()
+                self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
             return
-        
+
+        #############################
+        ### GESTIONAR PROMOCIONES ###
+        #############################
+
+        # --- ENDPOINT: Agregar Promoción ---
         elif self.path == '/agregarPromocion':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -789,6 +739,7 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
             return
         
+        # --- ENDPOINT: Editar Promoción ---
         elif self.path == '/editarPromocion':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -819,6 +770,7 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
             return
 
+        # --- ENDPOINT: Eliminar Promoción ---
         elif self.path == '/eliminarPromocion':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)

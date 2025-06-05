@@ -3,13 +3,25 @@ import decimal
 from gestorConfig import DB_CONFIG
 import datetime
 
+'''
+Gestor de Contenido (OG09)
+Modifica las tablas TablaContenido (OE07), TablaPromocion (OE08) y ContenidoCliente (OE10).
+Funciones:
+- agregar_contenido: Inserta un nuevo contenido y asigna la mejor promoción.
+- editar_contenido: Actualiza un contenido existente.
+- eliminar_contenido: Elimina un contenido y notifica a los usuarios afectados.
+- obtener_contenidos: Devuelve una lista de todos los contenidos.
+- obtener_contenido_unique: Devuelve un contenido por ID o nombre (case sensitive).
+- existe_contenido: Verifica si un contenido con un nombre específico ya existe.
+- obtener_contenido: Devuelve un contenido por ID o nombre.
+'''
+
 class GestorContenido:
     @staticmethod
     def agregar_contenido(data, archivo_binario=None):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor()
-            # 1. Insertar el contenido SIN promocion_id
             sql = """
                 INSERT INTO TablaContenido
                 (nombre, autor, descripcion, tipo, categoria, extension, mime, precio, calificacion, archivo)
@@ -30,7 +42,6 @@ class GestorContenido:
             cursor.execute(sql, valores)
             contenido_id = cursor.lastrowid
 
-            # 2. Buscar promociones activas por autor o categoría
             cursor2 = conexion.cursor(dictionary=True)
             hoy = datetime.date.today().isoformat()
             # Buscar promociones por autor
@@ -62,7 +73,7 @@ class GestorContenido:
             """, tuple([hoy, hoy] + categorias))
             promos_categoria = cursor2.fetchall()
 
-            # 3. Elegir la promoción de mayor porcentaje
+            # Elegir la promoción de mayor porcentaje
             todas = promos_autor + promos_categoria
             if todas:
                 mejor = max(todas, key=lambda p: p['porcentaje'])
@@ -78,38 +89,57 @@ class GestorContenido:
             if 'conexion' in locals(): conexion.close()
 
     @staticmethod
-    def editar_contenido(nombre_actual, nuevo_nombre, autor, descripcion, precio):
+    def editar_contenido(contenido_id, nuevo_nombre, descripcion, precio, autor):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
-            cursor = conexion.cursor()
-            sql = """
-                UPDATE TablaContenido
-                SET nombre = %s, autor = %s, descripcion = %s, precio = %s
-                WHERE nombre = %s
-            """
-            valores = (nuevo_nombre, autor, descripcion, precio, nombre_actual)
-            cursor.execute(sql, valores)
+            cursor = conexion.cursor(dictionary=True)
+            # Verificar duplicado
+            cursor.execute("SELECT id FROM TablaContenido WHERE nombre = %s AND id != %s", (nuevo_nombre, contenido_id))
+            duplicado = cursor.fetchone()
+            if duplicado:
+                return {'ok': False, 'error': 'Ya existe otro contenido con ese nombre.'}
+            # Actualizar contenido
+            cursor.execute(
+                "UPDATE TablaContenido SET nombre = %s, descripcion = %s, precio = %s, autor = %s WHERE id = %s",
+                (nuevo_nombre, descripcion, precio, autor, contenido_id)
+            )
             conexion.commit()
-            return cursor.rowcount > 0
-        except mysql.connector.Error as err:
-            print(f"Error al editar contenido: {err}")
-            return False
+            return {'ok': True, 'mensaje': 'Contenido editado correctamente.'}
+        except Exception as e:
+            return {'ok': False, 'error': str(e)}
         finally:
-            if 'cursor' in locals: cursor.close()
+            if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
     @staticmethod
-    def eliminar_contenido(nombre):
+    def eliminar_contenido(contenido_id):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
-            cursor = conexion.cursor()
-            sql = "DELETE FROM TablaContenido WHERE nombre = %s"
-            cursor.execute(sql, (nombre,))
+            cursor = conexion.cursor(dictionary=True)
+            # Obtener nombre del contenido
+            cursor.execute("SELECT nombre FROM TablaContenido WHERE id = %s", (contenido_id,))
+            row = cursor.fetchone()
+            if not row:
+                return {'ok': False, 'error': 'Contenido no encontrado.'}
+            nombre_contenido = row['nombre']
+
+            # Buscar todos los usuarios que tengan el contenido
+            cursor.execute("SELECT usuario_id FROM ContenidoCliente WHERE contenido_id = %s", (contenido_id,))
+            usuarios = cursor.fetchall()
+            for usuario in usuarios:
+                mensaje = f"Lamentamos informarle que el contenido '{nombre_contenido}' ha sido retirado de la plataforma. Disculpe las molestias."
+                cursor.execute(
+                    "INSERT INTO Notificacion (usuario_id, emisor, mensaje) VALUES (%s, %s, %s)",
+                    (usuario['usuario_id'], 'Sistema', mensaje)
+                )
+            # Eliminar el contenido de la tabla de los usuarios
+            cursor.execute("DELETE FROM ContenidoCliente WHERE contenido_id = %s", (contenido_id,))
+            # Eliminar el contenido de la plataforma
+            cursor.execute("DELETE FROM TablaContenido WHERE id = %s", (contenido_id,))
             conexion.commit()
-            return cursor.rowcount > 0
-        except mysql.connector.Error as err:
-            print(f"Error al eliminar contenido: {err}")
-            return False
+            return {'ok': True, 'mensaje': 'Contenido eliminado correctamente.'}
+        except Exception as e:
+            return {'ok': False, 'error': str(e)}
         finally:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
@@ -166,6 +196,25 @@ class GestorContenido:
         except Exception as e:
             print(f"Error al verificar contenido: {e}")
             return False
+        finally:
+            if 'cursor' in locals(): cursor.close()
+            if 'conexion' in locals(): conexion.close()
+    
+    @staticmethod
+    def obtener_contenido(busqueda):
+        """Devuelve un contenido por id (si es dígito) o por nombre."""
+        try:
+            conexion = mysql.connector.connect(**DB_CONFIG)
+            cursor = conexion.cursor(dictionary=True)
+            if str(busqueda).isdigit():
+                cursor.execute("SELECT * FROM TablaContenido WHERE id = %s", (busqueda,))
+            else:
+                cursor.execute("SELECT * FROM TablaContenido WHERE nombre = %s", (busqueda,))
+            contenido = cursor.fetchone()
+            return contenido
+        except Exception as e:
+            print(f"Error al obtener contenido: {e}")
+            return None
         finally:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()

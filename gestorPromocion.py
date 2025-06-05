@@ -3,6 +3,22 @@ import decimal
 from gestorConfig import DB_CONFIG
 import datetime
 
+'''
+Gestor Proociones (OG11)
+Modifica las tablas TablaPromocion (OE08) y TablaContenido (OE07) 
+Funciones:
+- agregar_promocion: Agrega una nueva promoción y la aplica a los contenidos afectados.
+- editar_promocion: Edita una promoción existente.
+- eliminar_promocion: Elimina una promoción y quita su asociación de los contenidos.
+- obtener_promocion_por_id: Obtiene una promoción por su ID.
+- obtener_promocion_por_nombre: Obtiene una promoción por su nombre.
+- obtener_promociones: Obtiene todas las promociones.
+- obtener_autores: Obtiene una lista de autores únicos de la tabla de contenidos.
+- obtener_categorias: Obtiene una lista de nombres de categorías.
+- obtener_contenidos_por_autor: Obtiene contenidos filtrados por autor.
+- obtener_contenidos_por_categoria_y_subcategorias: Obtiene contenidos de una categoría y todas sus subcategorías.
+- obtener_contenidos_por_promocion: Obtiene contenidos asociados a una promoción.
+'''
 class GestorPromociones:
     @staticmethod
     def agregar_promocion(nombre, descripcion, fecha_inicio, fecha_fin, porcentaje, modo, valor):
@@ -10,7 +26,7 @@ class GestorPromociones:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor(dictionary=True)
 
-            # 1. Crear la promoción
+            # Crear la promoción
             cursor.execute(
                 "INSERT INTO TablaPromocion (nombre, porcentaje, descripcion, fecha_inicio, fecha_fin) VALUES (%s, %s, %s, %s, %s)",
                 (nombre, porcentaje, descripcion, fecha_inicio, fecha_fin)
@@ -18,7 +34,7 @@ class GestorPromociones:
             conexion.commit()
             promo_id = cursor.lastrowid
 
-            # 2. Buscar los contenidos afectados
+            # Buscar los contenidos afectados
             if modo == 'autor':
                 cursor.execute("SELECT id, promocion_id FROM TablaContenido WHERE autor = %s", (valor,))
                 contenidos = cursor.fetchall()
@@ -40,7 +56,7 @@ class GestorPromociones:
             else:
                 contenidos = []
 
-            # 3. Para cada contenido, asignar la promoción si corresponde
+            # Para cada contenido, asignar la promoción si corresponde
             for contenido in contenidos:
                 contenido_id = contenido['id']
                 promocion_actual_id = contenido['promocion_id']
