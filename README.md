@@ -1,6 +1,6 @@
 # **Fauget**
 
-Este proyecto es un sistema de compra y descarga de contenidos digitales desarrollado en Python utilizando un servidor HTTP básico y una base de datos MySQL. Permite agregar, editar y eliminar categorías, así como gestionar contenido relacionado -> Fauget V1.0
+Este proyecto es un sistema de compra y descarga de contenidos digitales desarrollado en Python utilizando un servidor HTTP básico y una base de datos MySQL. Permite agregar, editar y eliminar categorías, así como gestionar contenido relacionado -> Fauget V2.0
 
 ---
 
@@ -64,39 +64,10 @@ pip install -r requirements.txt
    Si usas XAMPP, asegúrate de que el servicio MySQL esté en ejecución.
 
 2. **Crear la base de datos y tablas**  
-   Ejecuta el siguiente script SQL en tu servidor MySQL para crear la base de datos y las tablas necesarias:
+   Ejecuta los siguientes scripts SQL en tu servidor MySQL para crear la base de datos y las tablas necesarias:
 
-   ```sql
-   CREATE DATABASE proyecto;
-
-   USE proyecto;
-
-   CREATE TABLE TablaUsuarios (
-       id INT AUTO_INCREMENT PRIMARY KEY,
-       username_ VARCHAR(255) NOT NULL,
-       password_ VARCHAR(255) NOT NULL
-   );
-
-   CREATE TABLE TablaCategorias (
-       id INT AUTO_INCREMENT PRIMARY KEY,
-       nombre VARCHAR(255) NOT NULL,
-       categoria_padre ENUM('video', 'imagen', 'sonido') NOT NULL
-   );
-
-   INSERT INTO TablaUsuarios (username_, password_) VALUES ('admin', '1234');
-
-   INSERT INTO TablaCategorias (nombre, categoria_padre) VALUES
-   ('Películas', 'video'),
-   ('Documentales', 'video'),
-   ('Animación', 'video'),
-   ('Fotografía de Naturaleza', 'imagen'),
-   ('Retratos', 'imagen'),
-   ('Paisajes', 'imagen'),
-   ('Rock', 'sonido'),
-   ('Clásica', 'sonido'),
-   ('Jazz', 'sonido'),
-   ('Pop', 'sonido');
-   ```
+   - `tablas.sql`
+   - `tablasdatatest.sql`
 
 3. **Configurar la conexión a la base de datos**  
    Asegúrate de que las credenciales de conexión en el archivo `server.py` sean correctas:
@@ -129,29 +100,8 @@ pip install -r requirements.txt
    - **Inicio de sesión:** Usa las credenciales `admin` y `1234` para acceder.
    - **Gestión de categorías:** Agregar, editar y eliminar categorías.
    - **Gestión de contenido:** Navega por las opciones disponibles en la interfaz.
-
----
-
-## **Estructura del proyecto**
-
-```
-Fauget/
-│
-├── templates/                # Archivos HTML para las vistas
-│   ├── AdminPaginaPrincipal.html
-│   ├── AdminGestorCategorias.html
-│   ├── AdminGestorContenido.html
-│   ├── AdminGestorPromociones.html
-│   └── CargarSaldo.html
-│
-├── static/                   # Archivos estáticos (CSS, JS, imágenes)
-│
-├── server.py                 # Código principal del servidor
-├── historial.txt             # Script SQL para la base de datos
-├── requirements.txt          # Dependencias del proyecto
-└── README.md                 # Instrucciones del proyecto
-```
-
+   - **Gestión de promociones:** Crear, editar, activar/desactivar y eliminar promociones.
+   - **Gestión de perfil:** Los clientes pueden ver y editar la información de su cuenta.
 ---
 
 ## **Notas importantes**

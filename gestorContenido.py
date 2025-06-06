@@ -48,14 +48,14 @@ class GestorContenido:
             cursor2.execute("""
                 SELECT id, porcentaje FROM TablaPromocion
                 WHERE fecha_inicio <= %s AND fecha_fin >= %s AND id IN (
-                    SELECT promocion_id FROM TablaContenido WHERE autor = %s
+                    SELECT promocion_id FROM TablaContenido WHERE autor = %s AND estado = 1
                 )
             """, (hoy, hoy, data.get('autor')))
             promos_autor = cursor2.fetchall()
 
             # Buscar promociones por categoría y subcategorías
             def obtener_categorias_hijas(cat):
-                cursor2.execute("SELECT nombre FROM TablaCategorias WHERE categoria_padre = %s", (cat,))
+                cursor2.execute("SELECT nombre FROM TablaCategorias WHERE categoria_padre = %s AND estado = 1", (cat,))
                 hijas = [row['nombre'] for row in cursor2.fetchall()]
                 todas = []
                 for hija in hijas:
@@ -67,7 +67,7 @@ class GestorContenido:
             formato = ','.join(['%s'] * len(categorias))
             cursor2.execute(f"""
                 SELECT id, porcentaje FROM TablaPromocion
-                WHERE fecha_inicio <= %s AND fecha_fin >= %s AND id IN (
+                WHERE fecha_inicio <= %s AND fecha_fin >= %s AND estado = 1 AND id IN (
                     SELECT promocion_id FROM TablaContenido WHERE categoria IN ({formato})
                 )
             """, tuple([hoy, hoy] + categorias))
@@ -77,7 +77,7 @@ class GestorContenido:
             todas = promos_autor + promos_categoria
             if todas:
                 mejor = max(todas, key=lambda p: p['porcentaje'])
-                cursor.execute("UPDATE TablaContenido SET promocion_id = %s WHERE id = %s", (mejor['id'], contenido_id))
+                cursor.execute("UPDATE TablaContenido SET promocion_id = %s WHERE id = %s AND estado = 1", (mejor['id'], contenido_id))
             conexion.commit()
             return True
         except Exception as err:
@@ -94,13 +94,13 @@ class GestorContenido:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor(dictionary=True)
             # Verificar duplicado
-            cursor.execute("SELECT id FROM TablaContenido WHERE nombre = %s AND id != %s", (nuevo_nombre, contenido_id))
+            cursor.execute("SELECT id FROM TablaContenido WHERE nombre = %s AND id != %s AND estado = 1", (nuevo_nombre, contenido_id))
             duplicado = cursor.fetchone()
             if duplicado:
                 return {'ok': False, 'error': 'Ya existe otro contenido con ese nombre.'}
             # Actualizar contenido
             cursor.execute(
-                "UPDATE TablaContenido SET nombre = %s, descripcion = %s, precio = %s, autor = %s WHERE id = %s",
+                "UPDATE TablaContenido SET nombre = %s, descripcion = %s, precio = %s, autor = %s WHERE id = %s AND estado = 1",
                 (nuevo_nombre, descripcion, precio, autor, contenido_id)
             )
             conexion.commit()
@@ -117,14 +117,14 @@ class GestorContenido:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor(dictionary=True)
             # Obtener nombre del contenido
-            cursor.execute("SELECT nombre FROM TablaContenido WHERE id = %s", (contenido_id,))
+            cursor.execute("SELECT nombre FROM TablaContenido WHERE id = %s AND estado = 1", (contenido_id,))
             row = cursor.fetchone()
             if not row:
                 return {'ok': False, 'error': 'Contenido no encontrado.'}
             nombre_contenido = row['nombre']
 
             # Buscar todos los usuarios que tengan el contenido
-            cursor.execute("SELECT usuario_id FROM ContenidoCliente WHERE contenido_id = %s", (contenido_id,))
+            cursor.execute("SELECT usuario_id FROM ContenidoCliente WHERE contenido_id = %s AND estado = 1", (contenido_id,))
             usuarios = cursor.fetchall()
             for usuario in usuarios:
                 mensaje = f"Lamentamos informarle que el contenido '{nombre_contenido}' ha sido retirado de la plataforma. Disculpe las molestias."
@@ -134,8 +134,8 @@ class GestorContenido:
                 )
             # Eliminar el contenido de la tabla de los usuarios
             cursor.execute("DELETE FROM ContenidoCliente WHERE contenido_id = %s", (contenido_id,))
-            # Eliminar el contenido de la plataforma
-            cursor.execute("DELETE FROM TablaContenido WHERE id = %s", (contenido_id,))
+            # Cambiar el estado del contenido a 0 (inactivo) en vez de eliminarlo
+            cursor.execute("UPDATE TablaContenido SET estado = 0 WHERE id = %s", (contenido_id,))
             conexion.commit()
             return {'ok': True, 'mensaje': 'Contenido eliminado correctamente.'}
         except Exception as e:
@@ -146,16 +146,31 @@ class GestorContenido:
 
     @staticmethod
     def obtener_contenidos():
-        """Devuelve una lista de contenidos con id, nombre, autor, descripcion y precio (precio como float)."""
+        """Devuelve una lista de contenidos con info básica y porcentaje de promoción activa si la tiene."""
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor(dictionary=True)
-            cursor.execute("SELECT id, nombre, autor, descripcion, precio FROM TablaContenido")
+            hoy = datetime.date.today().isoformat()
+            cursor.execute("""
+            SELECT c.id, c.nombre, c.autor, c.descripcion, c.categoria, c.precio,
+                CASE
+                    WHEN p.id IS NOT NULL
+                         AND %s BETWEEN p.fecha_inicio AND p.fecha_fin
+                         AND p.estado = 1
+                    THEN p.porcentaje
+                    ELSE NULL
+                END AS promocion_activa_porcentaje
+            FROM TablaContenido c
+            LEFT JOIN TablaPromocion p ON c.promocion_id = p.id
+            WHERE c.estado = 1
+              """, (hoy,))
             contenidos = cursor.fetchall()
-            # Convertir Decimal a float para el campo precio
+            # Convertir Decimal a float para el campo precio y porcentaje
             for c in contenidos:
                 if isinstance(c['precio'], decimal.Decimal):
                     c['precio'] = float(c['precio'])
+                if c.get('promocion_activa_porcentaje') is not None and isinstance(c['promocion_activa_porcentaje'], decimal.Decimal):
+                    c['promocion_activa_porcentaje'] = float(c['promocion_activa_porcentaje'])
             return contenidos
         except mysql.connector.Error as err:
             print(f"Error al obtener contenidos: {err}")
@@ -163,7 +178,6 @@ class GestorContenido:
         finally:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
-
     @staticmethod
     def obtener_contenido_unique(busqueda):
         """Devuelve la información de un contenido por ID o nombre (case sensitive)."""
@@ -171,9 +185,9 @@ class GestorContenido:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor(dictionary=True)
             if str(busqueda).isdigit():
-                cursor.execute("SELECT id, nombre, autor, descripcion, precio FROM TablaContenido WHERE id = %s", (busqueda,))
+                cursor.execute("SELECT id, nombre, autor, descripcion, precio FROM TablaContenido WHERE id = %s AND estado = 1", (busqueda,))
             else:
-                cursor.execute("SELECT id, nombre, autor, descripcion, precio FROM TablaContenido WHERE nombre = %s", (busqueda,))
+                cursor.execute("SELECT id, nombre, autor, descripcion, precio FROM TablaContenido WHERE nombre = %s AND estado = 1", (busqueda,))
             contenido = cursor.fetchone()
             if contenido and isinstance(contenido['precio'], decimal.Decimal):
                 contenido['precio'] = float(contenido['precio'])
@@ -190,7 +204,7 @@ class GestorContenido:
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor()
-            cursor.execute("SELECT COUNT(*) FROM TablaContenido WHERE nombre = %s", (nombre,))
+            cursor.execute("SELECT COUNT(*) FROM TablaContenido WHERE nombre = %s AND estado = 1", (nombre,))
             existe = cursor.fetchone()[0] > 0
             return existe
         except Exception as e:
@@ -207,9 +221,9 @@ class GestorContenido:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor(dictionary=True)
             if str(busqueda).isdigit():
-                cursor.execute("SELECT * FROM TablaContenido WHERE id = %s", (busqueda,))
+                cursor.execute("SELECT * FROM TablaContenido WHERE id = %s AND estado = 1", (busqueda,))
             else:
-                cursor.execute("SELECT * FROM TablaContenido WHERE nombre = %s", (busqueda,))
+                cursor.execute("SELECT * FROM TablaContenido WHERE nombre = %s AND estado = 1", (busqueda,))
             contenido = cursor.fetchone()
             return contenido
         except Exception as e:

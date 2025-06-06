@@ -14,3 +14,8 @@ DELIMITER ;
 
 -- Aumentar el tamaño máximo de paquete permitido para manejar archivos grandes
 SET GLOBAL max_allowed_packet = 104857600;
+
+-- Desactiva promociones no vigentes
+    UPDATE TablaPromocion
+    SET estado = 0
+    WHERE CURDATE() < fecha_inicio OR CURDATE() > fecha_fin;

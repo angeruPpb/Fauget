@@ -542,7 +542,9 @@
                         <th>Nombre</th>
                         <th>Autor(es)</th>
                         <th>Descripción</th>
+                        <th>Categoría</th>
                         <th>Precio</th>
+                        <th>Promoción (%)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -660,6 +662,18 @@
             contentTypeSelect.addEventListener("change", function () {
                 const tipoSeleccionado = contentTypeSelect.value;
                 obtenerCategoriasPorPadre(tipoSeleccionado);
+
+                // Cambiar el accept del input de archivo según el tipo
+                if (tipoSeleccionado === "imagen") {
+                    fileInput.accept = ".jpg,.jpeg,.png";
+                } else if (tipoSeleccionado === "sonido") {
+                    fileInput.accept = ".mp3,.flac,.wav";
+                } else if (tipoSeleccionado === "video") {
+                    fileInput.accept = ".mp4";
+                } else {
+                    fileInput.accept = "";
+                }
+                fileInput.value = "";
             });
             contentCategorySelect.innerHTML = '<option value="">Seleccione una categoría</option>';
 
@@ -668,38 +682,88 @@
             contentForm.addEventListener("submit", async function (e) {
                 e.preventDefault();
 
-                // Validar nombre duplicado antes de continuar
-                const nombre = document.getElementById("content-name").value.trim();
-                const existe = await fetch(`/existeContenido?nombre=${encodeURIComponent(nombre)}`)
-                    .then(res => res.json())
-                    .then(data => data.existe);
+                // Limpiar mensajes previos
+                duplicateWarning.style.display = "none";
+                fileErrorMessage.style.display = "none";
 
-                if (existe) {
+                // Validaciones
+                const nombre = document.getElementById("content-name").value.trim();
+                const autor = document.getElementById("content-author").value.trim();
+                const descripcion = document.getElementById("content-description").value.trim();
+                const precio = parseFloat(document.getElementById("content-price").value);
+                const categoria = contentCategorySelect.value;
+                const tipo = contentTypeSelect.value;
+                const file = fileInput.files[0];
+
+                // Nombre: 1-100 caracteres alfanuméricos
+                if (!/^[A-Za-z0-9_\-.,;áéíóúÁÉÍÓÚñÑ ]{1,100}$/.test(nombre)) {
+                    duplicateWarning.textContent = "Nombre: Cadena de 1 a 100 caracteres alfanuméricos.";
                     duplicateWarning.style.display = "block";
                     return;
-                } else {
-                    duplicateWarning.style.display = "none";
                 }
 
-                // ...el resto de tu validación y envío...
-                const file = fileInput.files[0];
+                // Autor: 1-100 caracteres alfanuméricos
+                if (!/^[A-Za-z0-9_\-.,;áéíóúÁÉÍÓÚñÑ ]{1,100}$/.test(autor)) {
+                    duplicateWarning.textContent = "Autor: Cadena de 1 a 100 caracteres alfanuméricos.";
+                    duplicateWarning.style.display = "block";
+                    return;
+                }
+
+                // Descripción: 1-300 caracteres alfanuméricos
+                if (!/^[A-Za-z0-9_\-.,;áéíóúÁÉÍÓÚñÑ ]{1,300}$/.test(descripcion)) {
+                    duplicateWarning.textContent = "Descripción: Cadena de 1 a 300 caracteres alfanuméricos.";
+                    duplicateWarning.style.display = "block";
+                    return;
+                }
+
+                // Precio: mayor a 0.00
+                if (isNaN(precio) || precio <= 0) {
+                    duplicateWarning.textContent = "Precio: Debe ser un número mayor a 0.00.";
+                    duplicateWarning.style.display = "block";
+                    return;
+                }
+
+                // Categoría: debe estar seleccionada
+                if (!categoria) {
+                    duplicateWarning.textContent = "Debe seleccionar una categoría.";
+                    duplicateWarning.style.display = "block";
+                    return;
+                }
+
+                // Tipo: debe estar seleccionado
+                if (!tipo) {
+                    duplicateWarning.textContent = "Debe seleccionar un tipo de contenido.";
+                    duplicateWarning.style.display = "block";
+                    return;
+                }
+
+                // Archivo: extensión y tamaño
                 if (!file) {
                     fileErrorMessage.textContent = "Debe seleccionar un archivo.";
                     fileErrorMessage.style.display = "block";
                     return;
                 }
+                const extensionesPermitidas = ['jpg', 'jpeg', 'png', 'mp3', 'flac', 'wav', 'mp4'];
+                const extension = file.name.split('.').pop().toLowerCase();
+                if (!extensionesPermitidas.includes(extension)) {
+                    fileErrorMessage.textContent = "Archivo: Formato no permitido (jpg, png, mp3, mp4, flac, wav).";
+                    fileErrorMessage.style.display = "block";
+                    return;
+                }
                 if (file.size > 100 * 1024 * 1024) {
-                    fileErrorMessage.textContent = "El archivo excede el límite de 100MB.";
+                    fileErrorMessage.textContent = "Archivo: El archivo excede el límite de 100MB.";
                     fileErrorMessage.style.display = "block";
                     return;
                 }
 
+                // Si todo está bien, ocultar mensajes de error
+                duplicateWarning.style.display = "none";
                 // Validar extensión y mime
                 const nombreArchivo = file.name;
-                const extension = nombreArchivo.split('.').pop().toLowerCase();
+
                 const mime = file.type;
 
-                const extensionesPermitidas = ['jpg', 'jpeg', 'png', 'mp3', 'flac', 'wav', 'mp4'];
+
                 const mimesPermitidos = [
                     'image/jpeg', 'image/png',
                     'audio/mpeg', 'audio/flac', 'audio/wav',
@@ -711,14 +775,25 @@
                     fileErrorMessage.style.display = "block";
                     return;
                 }
-
                 fileErrorMessage.style.display = "none";
 
+                // Validar nombre duplicado antes de continuar
+                const existe = await fetch(`/existeContenido?nombre=${encodeURIComponent(nombre)}`)
+                    .then(res => res.json())
+                    .then(data => data.existe);
+                alert("Validando contenido...");
+                if (existe) {
+                    duplicateWarning.style.display = "block";
+                    return;
+                } else {
+                    duplicateWarning.style.display = "none";
+                }
+                alert("Contenido validado correctamente. Procediendo a agregar...");
                 // Crear FormData y agregar campos
                 const formData = new FormData(contentForm);
                 formData.append("extension", extension);
                 formData.append("mime", mime);
-
+                alert("El contenido se está agregando, por favor espere...");
                 try {
                     const response = await fetch('/agregarContenido', {
                         method: 'POST',
@@ -782,8 +857,14 @@
                         contenido = await res.json();
                     }
                 } catch { }
-                if (!contenido || !contenido.id) {
-                    editContentSearchError.textContent = "No se encontró ningún contenido con ese ID.";
+
+                if (busqueda.length >= 100) {
+                    editContentSearchError.textContent = "La cadena no puede tener mas de 100 caracteres.";
+                    editContentSearchError.style.display = "block";
+                    return;
+                }
+                else if (!contenido || !contenido.id) {
+                    editContentSearchError.textContent = "No se encontró ningún contenido con ese ID/Nombre. Considerar mayúsculas/minúsculas.";
                     editContentSearchError.style.display = "block";
                     return;
                 }
@@ -964,14 +1045,20 @@
             function renderTable(data) {
                 contentTableBody.innerHTML = "";
                 data.forEach((contenido) => {
+                    // Usar solo promocion_activa_porcentaje
+                    let promo = contenido.promocion_activa_porcentaje !== null
+                        ? contenido.promocion_activa_porcentaje + " %"
+                        : "null";
                     const row = document.createElement("tr");
                     row.innerHTML = `
-                <td>${contenido.id}</td>
-                <td>${contenido.nombre}</td>
-                <td>${contenido.autor}</td>
-                <td>${contenido.descripcion}</td>
-                <td>S/ ${parseFloat(contenido.precio).toFixed(2)}</td>
-            `;
+            <td>${contenido.id}</td>
+            <td>${contenido.nombre}</td>
+            <td>${contenido.autor}</td>
+            <td>${contenido.descripcion}</td>
+            <td>${contenido.categoria}</td>
+            <td>S/ ${parseFloat(contenido.precio).toFixed(2)}</td>
+            <td>${promo}</td>
+        `;
                     contentTableBody.appendChild(row);
                 });
             }
@@ -999,7 +1086,6 @@
 
             loadContents();
         });
-    </script>
     </script>
 </body>
 

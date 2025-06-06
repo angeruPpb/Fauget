@@ -17,7 +17,8 @@ CREATE TABLE proyecto.TablaUsuarios (
 CREATE TABLE proyecto.TablaCategorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL UNIQUE,
-    categoria_padre VARCHAR(255) DEFAULT NULL
+    categoria_padre VARCHAR(255) DEFAULT NULL,
+    estado TINYINT(1) DEFAULT 1
 );
 
 -- Crear tabla de promociones
@@ -27,7 +28,8 @@ CREATE TABLE proyecto.TablaPromocion (
     porcentaje DECIMAL(5,2) NOT NULL,
     descripcion VARCHAR(255),
     fecha_inicio DATE NOT NULL,
-    fecha_fin DATE NOT NULL
+    fecha_fin DATE NOT NULL,
+    estado TINYINT(1) DEFAULT 1
 );
 
 -- Crear tabla de contenidos
@@ -44,6 +46,7 @@ CREATE TABLE proyecto.TablaContenido (
     calificacion DECIMAL(3,2) DEFAULT 0,
     archivo LONGBLOB,
     promocion_id INT DEFAULT NULL,
+    estado TINYINT(1) DEFAULT 1,
     FOREIGN KEY (promocion_id) REFERENCES proyecto.TablaPromocion(id) ON DELETE SET NULL
 );
 
@@ -80,3 +83,4 @@ CREATE TABLE proyecto.Notificacion (
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES proyecto.TablaCliente(id) ON DELETE CASCADE
 );
+

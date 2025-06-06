@@ -3,7 +3,7 @@ from gestorConfig import DB_CONFIG
 
 '''
 Gestor de Categorías (OG18)
-Modifica las tablas TablaCategorias (OE14) y TablaContenidos (OE07)
+Modifica las tablas TablaCategorias (OE14) y TablaContenido (OE07)
 Funciones:
 - agregar_categoria(data): Agrega una nueva categoría a la base de datos.
 - eliminar_categoria(data): Elimina una categoría y reasigna sus contenidos a la categoría padre.
@@ -24,7 +24,7 @@ class GestorCategorias:
             cursor = conexion.cursor()
 
             # Verificar existencia de la categoría padre
-            cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s", (categoria_padre,))
+            cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND estado = 1", (categoria_padre,))
             result = cursor.fetchone()
             parent_exists = result is not None and result[0] > 0
 
@@ -32,7 +32,7 @@ class GestorCategorias:
                 return {'ok': False, 'error': 'La categoría padre no existe.'}
 
             # Verificar si ya existe una fila con el mismo nombre y categoría padre
-            cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
+            cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s AND estado = 1", (nombre, categoria_padre))
             result = cursor.fetchone()
             if result is not None and result[0] > 0:
                 return {'ok': False, 'error': 'La categoría con este nombre y categoría padre ya existe.'}
@@ -69,13 +69,13 @@ class GestorCategorias:
             cursor = conexion.cursor()
 
             # Verificar si la categoría existe
-            cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
+            cursor.execute("SELECT COUNT(*) FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s AND estado = 1", (nombre, categoria_padre))
             existe = cursor.fetchone()[0] > 0
             if not existe:
                 return {'ok': False, 'error': f"La categoría '{nombre}' con padre '{categoria_padre}' no existe."}
 
             # Obtener la categoría padre de la categoría a eliminar
-            cursor.execute("SELECT categoria_padre FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
+            cursor.execute("SELECT categoria_padre FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s AND estado = 1", (nombre, categoria_padre))
             nueva_categoria = cursor.fetchone()
             cursor.fetchall()  # Limpiar resultados pendientes
 
@@ -84,15 +84,15 @@ class GestorCategorias:
             nueva_categoria = nueva_categoria[0]
 
             # Reasignar contenidos a la categoría padre
-            cursor.execute("UPDATE TablaContenidos SET categoria = %s WHERE categoria = %s", (nueva_categoria, nombre))
+            cursor.execute("UPDATE TablaContenido SET categoria = %s WHERE categoria = %s AND estado = 1", (nueva_categoria, nombre))
             conexion.commit()
 
             # Reasignar subcategorías a la nueva categoría padre
-            cursor.execute("UPDATE TablaCategorias SET categoria_padre = %s WHERE categoria_padre = %s", (nueva_categoria, nombre))
+            cursor.execute("UPDATE TablaCategorias SET categoria_padre = %s WHERE categoria_padre = %s AND estado = 1", (nueva_categoria, nombre))
             conexion.commit()
 
-            # Eliminar la categoría
-            cursor.execute("DELETE FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
+            # Cambiar el estado de la categoría a 0 (inactiva) en vez de eliminarla
+            cursor.execute("UPDATE TablaCategorias SET estado = 0 WHERE nombre = %s AND categoria_padre = %s", (nombre, categoria_padre))
             conexion.commit()
 
             return {'ok': True, 'mensaje': 'Categoría eliminada correctamente'}
@@ -111,15 +111,15 @@ class GestorCategorias:
 
         if not nombre_actual or not nuevo_nombre:
             return {'ok': False, 'error': 'Faltan parámetros'}
-
+    
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor()
             # Modificar el nombre de la categoría 
-            cursor.execute("UPDATE TablaCategorias SET nombre = %s WHERE nombre = %s", (nuevo_nombre, nombre_actual))
+            cursor.execute("UPDATE TablaCategorias SET nombre = %s WHERE nombre = %s AND estado = 1", (nuevo_nombre, nombre_actual))
             conexion.commit()
             # Modificar el nombre de la categoría en TablaContenidos
-            cursor.execute("UPDATE TablaContenidos SET categoria = %s WHERE categoria = %s", (nuevo_nombre, nombre_actual))
+            cursor.execute("UPDATE TablaContenido SET categoria = %s WHERE categoria = %s AND estado = 1", (nuevo_nombre, nombre_actual))
             conexion.commit()
             return {'ok': True, 'mensaje': 'Categoría editada correctamente'}
         except mysql.connector.Error as err:
@@ -135,7 +135,7 @@ class GestorCategorias:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor()
             # Verificar si la categoría existe
-            cursor.execute("SELECT EXISTS(SELECT 1 FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s)", (nombre, padre))
+            cursor.execute("SELECT EXISTS(SELECT 1 FROM TablaCategorias WHERE nombre = %s AND categoria_padre = %s AND estado = 1)", (nombre, padre))
             existe = cursor.fetchone()[0]
 
             if existe:
@@ -167,7 +167,7 @@ class GestorCategorias:
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor(dictionary=True)
-            sql = "SELECT * FROM TablaCategorias"
+            sql = "SELECT * FROM TablaCategorias WHERE estado = 1"
             params = []
             if filter_parent:
                 sql += " WHERE categoria_padre = %s"
@@ -190,7 +190,7 @@ class GestorCategorias:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor(dictionary=True)
             # Obtener las categorías hijas de una categoría dada
-            cursor.execute("SELECT nombre FROM TablaCategorias WHERE categoria_padre = %s", (padre,))
+            cursor.execute("SELECT nombre FROM TablaCategorias WHERE categoria_padre = %s AND estado = 1", (padre,))
             categorias = cursor.fetchall()
             return categorias
         except Exception as e:

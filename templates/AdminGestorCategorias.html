@@ -503,6 +503,13 @@
                 const categoryName = document.getElementById("category-name").value.trim();
                 const parentCategory = document.getElementById("parent-category").value.trim();
 
+                // Validar nombre
+                const nombreValido = /^[A-Za-zÁÉÍÓÚáéíóúÑñ ]{1,100}$/.test(categoryName) && categoryName.length <= 100 && !categoryName.endsWith(" ");
+                if (!nombreValido) {
+                    alert("El nombre de la categoría solo puede contener letras y espacios, sin espacios al final y máximo 100 caracteres.");
+                    return;
+                }
+
                 if (!categoryName || !parentCategory) {
                     alert("Por favor, complete todos los campos.");
                     return;

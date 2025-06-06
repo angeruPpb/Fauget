@@ -103,8 +103,8 @@ class GestorPromociones:
             cursor = conexion.cursor()
             # Eliminar la promoción de los contenidos
             cursor.execute("UPDATE TablaContenido SET promocion_id = NULL WHERE promocion_id = %s", (promo_id,))
-            # Eliminar la promoción de la tabla de promociones
-            cursor.execute("DELETE FROM TablaPromocion WHERE id = %s", (promo_id,))
+            # En lugar de eliminar la promoción de la tabla de promociones
+            cursor.execute("UPDATE TablaPromocion SET estado = 0 WHERE id = %s", (promo_id,))
             conexion.commit()
             return {'ok': True, 'mensaje': 'Promoción eliminada correctamente.'}
         except Exception as e:
