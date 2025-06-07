@@ -1,7 +1,7 @@
 import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
-import mysql.connector
+import mysql.connector   
 import os
 import mimetypes 
 import decimal
@@ -12,6 +12,7 @@ from gestorPromocion import *
 from gestorPerfil import *
 from gestorSesion import *
 from urllib.parse import urlparse, parse_qs
+
 
 class Manejador(BaseHTTPRequestHandler):
     RUTAS = {
