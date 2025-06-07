@@ -529,6 +529,7 @@
                         categoryForm.reset();
                         formContainer.style.display = "none";
                         mainOptions.style.display = "block";
+                        loadCategories();
                     } else {
                         const errorData = await response.json();
                         alert(errorData.error || "Error al agregar la categoría.");
@@ -584,6 +585,7 @@
                         editCategoryFormElement.reset();
                         formContainer.style.display = "none";
                         mainOptions.style.display = "block";
+                        loadCategories();
                     } else {
                         const errorData = await response.json();
                         alert(errorData.error || "Error al editar la categoría.");
@@ -643,6 +645,7 @@
                         deleteCategoryFormElement.reset();
                         formContainer.style.display = "none";
                         mainOptions.style.display = "block";
+                        loadCategories();
                     } else {
                         const errorData = await response.json();
                         alert(errorData.error || "Error al eliminar la categoría.");

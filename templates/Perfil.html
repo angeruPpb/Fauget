@@ -67,6 +67,15 @@
             flex-direction: column;
         }
 
+        /* Wrappers de vistas para layout flexible */
+        #view-perfil,
+        #view-notas,
+        #view-editar {
+            /* quitar cuadro fijo */
+            display: block;
+            overflow: visible;
+        }
+
         /* ---------------------- */
         /* Barra superior         */
         /* ---------------------- */
@@ -74,6 +83,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            /*padding: 20px 40px;*/
+            /*background-color: white;*/
+            /*box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);*/
             margin-bottom: 30px;
         }
 
@@ -196,6 +208,80 @@
             font-size: 0.9rem;
             color: #666;
         }
+
+        /* ---------------------- */
+        /* Seccion notas         */
+        /* ---------------------- */
+        .notas-container {
+            flex: 1;
+            padding: 20px 40px;
+            overflow-y: auto;
+            /* mantiene fondo del main */
+        }
+
+        .notas-container h2 {
+            margin-bottom: 1rem;
+            color: #8335e6;
+        }
+
+        .nota {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        /* ---------------------- */
+        /* Seccion editar perfil  */
+        /* ---------------------- */
+        .form-container {
+            max-width: 500px;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container h2 {
+            margin-bottom: 20px;
+            color: #4c1d95;
+            text-align: center;
+        }
+
+        .campo {
+            margin-bottom: 15px;
+        }
+
+        .campo label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .campo input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .btn-submit {
+            display: block;
+            width: 100%;
+            background-color: #7c3aed;
+            color: white;
+            padding: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background-color: #5b21b6;
+        }
     </style>
 </head>
 
@@ -203,7 +289,7 @@
 
     <!-- Menú lateral izquierdo -->
     <div class="sidebar">
-        <h1>Fauget</h1>
+        <h1><a href="/ClientePaginaPrincipal" style="color: white; text-decoration: none;">Fauget</a></h1>
         <ul>
             <li><a href="/ClientePaginaPrincipal">Inicio</a></li>
             <li><a href="#">Categorías</a></li>
@@ -211,7 +297,7 @@
             <li><a href="#">Notificaciones</a></li>
             <li><a href="#">Historial de descargas</a></li>
             <li><a href="#">My Playlist</a></li>
-            <li><a class="active" href="/Perfil?idCliente=1">Mi Perfil</a></li>
+            <li><a class="active" href="/Perfil">Mi Perfil</a></li>
             <li><a href="#">Configuración</a></li>
         </ul>
     </div>
@@ -221,51 +307,83 @@
         <!-- Barra superior -->
         <div class="top-bar">
             <div class="search-bar">
-                <input type="text" placeholder="Buscar contenido..." />
+                <input type="text" placeholder="Imágenes, sonidos, videos" />
             </div>
             <div class="user-info">
-                <!-- Ejemplo: nombre en header y foto pequeña -->
-                <span id="header-nombre">Cliente</span>
-                <img id="header-foto" src="static/uploads/default.png" alt="Usuario">
+                <a href="/Perfil" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                    <span id="header-nombre">{{NOMBRE}}</span>
+                    <img id="header-foto" src="static/uploads/default.png" alt="Usuario" />
+                </a>
             </div>
         </div>
 
-        <!-- Seccion "Mi perfil" -->
-        <section class="perfil">
-            <h2>Mi perfil</h2>
-            <div class="campo">
-                <label>Nombre:</label>
-                <span id="perfil-nombre"></span>
-            </div>
-            <div class="campo">
-                <label>Correo:</label>
-                <span id="perfil-correo"></span>
-            </div>
-            <div class="campo">
-                <label>Saldo:</label>
-                <span id="perfil-saldo">S/ 0.00</span>
-            </div>
-            <div class="campo">
-                <label>Foto de perfil:</label>
-                <br>
-                <img id="perfil-foto" src="static/uploads/default.png" alt="Foto perfil"
-                    style="width:80px; height:80px; border-radius:50%; margin-top:10px;">
-            </div>
-            <div class="botones">
-                <button id="btn-desplegar-notas">DESPLEGAR NOTAS</button>
-                <button id="btn-editar-perfil">EDITAR PERFIL</button>
-                <button id="btn-recargar-saldo">RECARGAR SALDO</button>
-            </div>
-        </section>
-
-        <!-- Seccion "Historial de descargas (10 más recientes)" -->
-        <section class="historial">
-            <h2>Historial de descargas</h2>
-            <div id="lista-historial">
-                <!-- Aquí se cargarán, vía JavaScript/fetch, los últimos 10 items -->
-                <p>Cargando historial...</p>
-            </div>
-        </section>
+        <!-- Contenedor de vistas dinámicas -->
+        <div id="view-perfil">
+          <!-- Sección Mi Perfil -->
+          <section class="perfil">
+              <h2>Mi perfil</h2>
+              <div class="campo">
+                  <label>Nombre:</label>
+                  <span id="perfil-nombre"></span>
+              </div>
+              <div class="campo">
+                  <label>Correo:</label>
+                  <span id="perfil-correo"></span>
+              </div>
+              <div class="campo">
+                  <label>Saldo:</label>
+                  <span id="perfil-saldo">S/ 0.00</span>
+              </div>
+              <div class="campo">
+                  <label>Foto de perfil:</label>
+                  <br>
+                  <img id="perfil-foto" src="static/uploads/default.png" alt="Foto perfil"
+                      style="width:80px; height:80px; border-radius:50%; margin-top:10px;">
+              </div>
+              <div class="botones">
+                  <button type="button" id="btn-notas">MIS NOTAS</button>
+                  <button type="button" id="btn-editar">EDITAR PERFIL</button>
+              </div>
+          </section>
+          <!-- Sección Historial -->
+          <section class="historial">
+              <h2>Historial de descargas</h2>
+              <div id="lista-historial"><p>Cargando historial...</p></div>
+          </section>
+        </div>
+        <!-- Sección Notas Oculta -->
+        <div id="view-notas" style="display:none;">
+          <section class="notas-container">
+            <h2>Mis Notas</h2>
+            <div id="lista-notas"><p>[ Vacío por ahora - Se necesita haber descargado contenido para calificar ]</p></div>
+          </section>
+        </div>
+        <!-- Sección Editar Perfil Oculta -->
+        <div id="view-editar" style="display:none;">
+          <div class="form-container">
+            <h2>Editar Perfil</h2>
+            <form id="form-editar" method="post" action="/actualizarPerfil">
+              <input type="hidden" name="idCliente" value="{{ID_CLIENTE}}" />
+              <div class="campo">
+                <label for="input-nombre">Nombre completo:</label>
+                <input type="text" id="input-nombre" name="nombre" required placeholder="Escribe tu nombre completo" />
+              </div>
+              <div class="campo">
+                <label for="input-correo">Correo electrónico:</label>
+                <input type="email" id="input-correo" name="correo" required placeholder="usuario@ejemplo.com" />
+              </div>
+              <div class="campo">
+                <label for="input-nueva-contrasena">Nueva contraseña (opcional):</label>
+                <input type="password" id="input-nueva-contrasena" name="nueva_contrasena" placeholder="Deja vacío si no cambia" />
+              </div>
+              <div class="campo">
+                <label for="input-contrasena-anterior">Contraseña anterior:</label>
+                <input type="password" id="input-contrasena-anterior" name="contrasena_anterior" required placeholder="Ingresa tu contraseña actual" />
+              </div>
+              <button type="submit" class="btn-submit">Guardar cambios</button>
+            </form>
+          </div>
+        </div>
     </div>
     <script>
         // --------------------------
@@ -273,10 +391,8 @@
         // --------------------------
         
         function cargarPerfil(paraEdicion = false) {
-            // Obtener idCliente de la query string
-            const params = new URLSearchParams(window.location.search);
-            const idCliente = params.get('idCliente') || '1';
-            fetch(`/getPerfil?idCliente=${idCliente}`)
+            // Obtener datos de perfil desde sesión
+            fetch(`/getPerfil`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.error) {
@@ -319,45 +435,83 @@
             if (cont) {
                 cont.innerHTML = "";
                 const parrafo = document.createElement("p");
-                parrafo.textContent = "Aquí se mostrarán las 10 descargas más recientes.";
+                parrafo.textContent = "[ Vacío por ahora - Se necesita descargar contenido ]";
                 cont.appendChild(parrafo);
             }
         }
-
+        
         document.addEventListener("DOMContentLoaded", () => {
-            // Detectar si estamos en la página de edición
-            const esEdicion = window.location.pathname.includes("EditarPerfil");
-            cargarPerfil(esEdicion);
+            // Cargar datos del perfil
+            cargarPerfil();
             cargarHistorial();
 
             // Botón “Editar Perfil”
-            const btnEditar = document.getElementById("btn-editar-perfil");
+            const btnEditar = document.getElementById("btn-editar");
             if (btnEditar) {
                 btnEditar.addEventListener("click", () => {
-                    const params = new URLSearchParams(window.location.search);
-                    const idCliente = params.get('idCliente') || '1';
-                    window.location.href = `/EditarPerfil?idCliente=${idCliente}`;
+                    document.getElementById('view-perfil').style.display = 'none';
+                    document.getElementById('view-notas').style.display = 'none';
+                    document.getElementById('view-editar').style.display = 'block';
+                    cargarPerfil(true); // cargar datos en inputs al editar
                 });
             }
 
-            // Botón “Desplegar Notas”
-            const btnNotas = document.getElementById("btn-desplegar-notas");
+            // Botón “MIS NOTAS”
+            const btnNotas = document.getElementById("btn-notas");
             if (btnNotas) {
-                btnNotas.addEventListener("click", () => {
-                    const params = new URLSearchParams(window.location.search);
-                    const idCliente = params.get('idCliente') || '1';
-                    window.location.href = `/NotasCliente?idCliente=${idCliente}`;
+                btnNotas.addEventListener("click", async () => {
+                    // Mostrar sección notas y ocultar las demás antes de la solicitud
+                    document.getElementById('view-perfil').style.display = 'none';
+                    document.getElementById('view-editar').style.display = 'none';
+                    document.getElementById('view-notas').style.display = 'block';
+                    try {
+                        const res = await fetch('/getNotas');
+                        const data = await res.json();
+                        const cont = document.getElementById('lista-notas');
+                        cont.innerHTML = '';
+                        if (Array.isArray(data) && data.length) {
+                            data.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'nota';
+                                div.textContent = `Calificaste el ${item.tipo} "${item.nombre}" con ${item.nota} el ${item.fecha}`;
+                                cont.appendChild(div);
+                            });
+                        } else {
+                            const p = document.createElement('p');
+                            p.textContent = 'No hay notas para mostrar.';
+                            cont.appendChild(p);
+                        }
+                    } catch (err) {
+                        console.error('Error al obtener notas:', err);
+                    }
                 });
             }
 
-            // Botón “Recargar Saldo”
-            const btnSaldo = document.getElementById("btn-recargar-saldo");
-            if (btnSaldo) {
-                btnSaldo.addEventListener("click", () => {
-                    const params = new URLSearchParams(window.location.search);
-                    const idCliente = params.get('idCliente') || '1';
-                    window.location.href = `/CargarSaldo?idCliente=${idCliente}`;
-                });
+            // Manejar envío del formulario de edición por AJAX
+            const formEditar = document.getElementById('form-editar');
+            if (formEditar) {
+              formEditar.addEventListener('submit', e => {
+                e.preventDefault();
+                const params = new URLSearchParams(new FormData(formEditar));
+                fetch('/actualizarPerfil', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: params.toString()
+                })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.error) {
+                    alert('Error: ' + data.error);
+                  } else if (data.success) {
+                    alert(data.mensaje || 'Perfil actualizado exitosamente.');
+                    // Volver a vista perfil y recargar datos
+                    document.getElementById('view-editar').style.display = 'none';
+                    document.getElementById('view-perfil').style.display = 'block';
+                    cargarPerfil();
+                  }
+                })
+                .catch(err => console.error('Error al actualizar perfil:', err));
+              });
             }
 
             // Mostrar mensaje de éxito si viene ?exito=1

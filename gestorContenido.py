@@ -7,18 +7,18 @@ import datetime
 Gestor de Contenido (OG09)
 Modifica las tablas TablaContenido (OE07), TablaPromocion (OE08) y ContenidoCliente (OE10).
 Funciones:
-- agregar_contenido: Inserta un nuevo contenido y asigna la mejor promoción.
-- editar_contenido: Actualiza un contenido existente.
-- eliminar_contenido: Elimina un contenido y notifica a los usuarios afectados.
-- obtener_contenidos: Devuelve una lista de todos los contenidos.
-- obtener_contenido_unique: Devuelve un contenido por ID o nombre (case sensitive).
-- existe_contenido: Verifica si un contenido con un nombre específico ya existe.
-- obtener_contenido: Devuelve un contenido por ID o nombre.
+- (FA001) agregar_contenido: Inserta un nuevo contenido y asigna la mejor promoción.  
+- (FA002) editar_contenido: Actualiza un contenido existente.                       
+- (FA003) eliminar_contenido: Elimina un contenido y notifica a los usuarios afectados.
+- (FA004) obtener_contenidos: Devuelve una lista de todos los contenidos.               
+- (FA005) obtener_contenido_unique: Devuelve un contenido por ID o nombre (case sensitive).
+- (FA006) existe_contenido: Verifica si un contenido con un nombre específico ya existe.
+- (FA007) obtener_contenido: Devuelve un contenido por ID o nombre.
 '''
 
 class GestorContenido:
-    @staticmethod
-    def agregar_contenido(data, archivo_binario=None):
+    @staticmethod #FA001
+    def agregar_contenido(data, archivo_binario=None): 
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
             cursor = conexion.cursor()
@@ -88,7 +88,7 @@ class GestorContenido:
             if 'cursor2' in locals(): cursor2.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA002
     def editar_contenido(contenido_id, nuevo_nombre, descripcion, precio, autor):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
@@ -111,7 +111,7 @@ class GestorContenido:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA003
     def eliminar_contenido(contenido_id):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
@@ -119,12 +119,14 @@ class GestorContenido:
             # Obtener nombre del contenido
             cursor.execute("SELECT nombre FROM TablaContenido WHERE id = %s AND estado = 1", (contenido_id,))
             row = cursor.fetchone()
+            print(f"id del contenido a eliminar: {contenido_id}")
+            print(f"Contenido a eliminar: {row}")
             if not row:
                 return {'ok': False, 'error': 'Contenido no encontrado.'}
             nombre_contenido = row['nombre']
 
             # Buscar todos los usuarios que tengan el contenido
-            cursor.execute("SELECT usuario_id FROM ContenidoCliente WHERE contenido_id = %s AND estado = 1", (contenido_id,))
+            cursor.execute("SELECT usuario_id FROM ContenidoCliente WHERE contenido_id = %s", (contenido_id,))
             usuarios = cursor.fetchall()
             for usuario in usuarios:
                 mensaje = f"Lamentamos informarle que el contenido '{nombre_contenido}' ha sido retirado de la plataforma. Disculpe las molestias."
@@ -144,7 +146,7 @@ class GestorContenido:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA004
     def obtener_contenidos():
         """Devuelve una lista de contenidos con info básica y porcentaje de promoción activa si la tiene."""
         try:
@@ -178,7 +180,8 @@ class GestorContenido:
         finally:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
-    @staticmethod
+    
+    @staticmethod #FA005
     def obtener_contenido_unique(busqueda):
         """Devuelve la información de un contenido por ID o nombre (case sensitive)."""
         try:
@@ -199,7 +202,7 @@ class GestorContenido:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA006
     def existe_contenido(nombre):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
@@ -214,7 +217,7 @@ class GestorContenido:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
     
-    @staticmethod
+    @staticmethod #FA007
     def obtener_contenido(busqueda):
         """Devuelve un contenido por id (si es dígito) o por nombre."""
         try:

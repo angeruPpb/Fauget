@@ -7,20 +7,21 @@ import datetime
 Gestor Proociones (OG11)
 Modifica las tablas TablaPromocion (OE08) y TablaContenido (OE07) 
 Funciones:
-- agregar_promocion: Agrega una nueva promoción y la aplica a los contenidos afectados.
-- editar_promocion: Edita una promoción existente.
-- eliminar_promocion: Elimina una promoción y quita su asociación de los contenidos.
-- obtener_promocion_por_id: Obtiene una promoción por su ID.
-- obtener_promocion_por_nombre: Obtiene una promoción por su nombre.
-- obtener_promociones: Obtiene todas las promociones.
-- obtener_autores: Obtiene una lista de autores únicos de la tabla de contenidos.
-- obtener_categorias: Obtiene una lista de nombres de categorías.
-- obtener_contenidos_por_autor: Obtiene contenidos filtrados por autor.
-- obtener_contenidos_por_categoria_y_subcategorias: Obtiene contenidos de una categoría y todas sus subcategorías.
-- obtener_contenidos_por_promocion: Obtiene contenidos asociados a una promoción.
+- (FA015) agregar_promocion: Agrega una nueva promoción y la aplica a los contenidos afectados.
+- (FA016) editar_promocion: Edita una promoción existente.
+- (FA017) eliminar_promocion: Elimina una promoción y quita su asociación de los contenidos.
+- (FA018) obtener_promocion_por_id: Obtiene una promoción por su ID.
+- (FA019) obtener_promocion_por_nombre: Obtiene una promoción por su nombre.
+- (FA020) obtener_promociones: Obtiene todas las promociones.
+- (FA021) obtener_autores: Obtiene una lista de autores únicos de la tabla de contenidos.
+- (FA022) obtener_categorias: Obtiene una lista de nombres de categorías.
+- (FA023) obtener_contenidos_por_autor: Obtiene contenidos filtrados por autor.
+- (FA024) obtener_contenidos_por_categoria_y_subcategorias: Obtiene contenidos de una categoría y todas sus subcategorías.
+- (FA025) obtener_contenidos_por_promocion: Obtiene contenidos asociados a una promoción.
 '''
+
 class GestorPromociones:
-    @staticmethod
+    @staticmethod #FA015
     def agregar_promocion(nombre, descripcion, fecha_inicio, fecha_fin, porcentaje, modo, valor):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
@@ -79,7 +80,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA016
     def editar_promocion(promo_id, nombre, descripcion, fecha_inicio, fecha_fin, porcentaje):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
@@ -96,7 +97,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA017
     def eliminar_promocion(promo_id):
         try:
             conexion = mysql.connector.connect(**DB_CONFIG)
@@ -113,7 +114,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA018
     def obtener_promocion_por_id(promo_id):
         """Devuelve la promoción por id o None si no existe."""
         try:
@@ -140,7 +141,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA019
     def obtener_promocion_por_nombre(nombre):
         """Devuelve la promoción por nombre o None si no existe."""
         try:
@@ -167,7 +168,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA020
     def obtener_promociones():
         """Devuelve una lista de todas las promociones."""
         try:
@@ -194,7 +195,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA021
     def obtener_autores():
         """Devuelve una lista de autores únicos de la tabla de contenidos."""
         try:
@@ -210,7 +211,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA022
     def obtener_categorias():
         """Devuelve una lista de nombres de categorías."""
         try:
@@ -226,7 +227,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA023
     def obtener_contenidos_por_autor(autor):
         """Devuelve una lista de contenidos filtrados por autor."""
         try:
@@ -242,7 +243,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA024
     def obtener_contenidos_por_categoria_y_subcategorias(categoria):
         """Devuelve contenidos de una categoría y todas sus subcategorías."""
         try:
@@ -271,7 +272,7 @@ class GestorPromociones:
             if 'cursor' in locals(): cursor.close()
             if 'conexion' in locals(): conexion.close()
 
-    @staticmethod
+    @staticmethod #FA025
     def obtener_contenidos_por_promocion(promo_id):
         """Devuelve una lista de contenidos asociados a una promoción."""
         try:

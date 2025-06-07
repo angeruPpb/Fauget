@@ -42,7 +42,14 @@
             font-size: 1rem;
             cursor: pointer;
         }
-
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar ul li a.active {
+            font-weight: bold;
+            text-decoration: underline;
+        }
         /* Contenido principal */
         .main {
             flex: 1;
@@ -148,16 +155,16 @@
 
     <!-- Menú lateral izquierdo -->
     <div class="sidebar">
-        <h1>Fauget</h1>
+        <h1><a href="/ClientePaginaPrincipal" style="color: white; text-decoration: none;">Fauget</a></h1>
         <ul>
-            <li>Inicio</li>
-            <li>Categorías</li>
-            <li>Promociones</li>
-            <li>Notificaciones</li>
-            <li>Historial de descargas</li>
-            <li>My Playlist</li>
+            <li><a class="active" href="/ClientePaginaPrincipal">Inicio</a></li>
+            <li><a href="#">Categorías</a></li>
+            <li><a href="#">Promociones</a></li>
+            <li><a href="#">Notificaciones</a></li>
+            <li><a href="#">Historial de descargas</a></li>
+            <li><a href="#">My Playlist</a></li>
             <li><a href="/Perfil">Mi Perfil</a></li>
-            <li>Configuración</li>
+            <li><a href="#">Configuración</a></li>
         </ul>
     </div>
 
@@ -169,8 +176,10 @@
                 <input type="text" placeholder="Imágenes, sonidos, videos" />
             </div>
             <div class="user-info">
-                <span>Claudia Alves</span>
-                <img src="https://i.ibb.co/YTjW3vF/user.jpg" alt="Usuario">
+                <a href="/Perfil" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: inherit;">
+                    <span id="header-nombre">{{NOMBRE}}</span>
+                    <img id="header-foto" src="static/uploads/default.png" alt="Usuario">
+                </a>
             </div>
         </div>
 
@@ -207,5 +216,22 @@
             </div>
         </div>
     </div>
+
+    <script>
+      // Cargar perfil del cliente en cabecera
+      document.addEventListener('DOMContentLoaded', () => {
+        fetch('/getPerfil')
+          .then(res => res.json())
+          .then(data => {
+            if (!data.error) {
+              const nameEl = document.getElementById('header-nombre');
+              const imgEl = document.getElementById('header-foto');
+              if (nameEl && data.nombre) nameEl.textContent = data.nombre;
+              if (imgEl && data.foto) imgEl.src = data.foto;
+            }
+          })
+          .catch(err => console.error('Error al obtener perfil:', err));
+      });
+    </script>
 </body>
 </html>

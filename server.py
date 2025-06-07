@@ -10,6 +10,7 @@ from gestorCategoria import *
 from gestorContenido import *
 from gestorPromocion import *
 from gestorPerfil import *
+from gestorSesion import *
 from urllib.parse import urlparse, parse_qs
 
 class Manejador(BaseHTTPRequestHandler):
@@ -25,6 +26,10 @@ class Manejador(BaseHTTPRequestHandler):
     # Plantilla base común
     BASE_HTML = None
 
+    # gestorSesion para leer la sesión y redirigir si no existe
+    def get_cliente(self):
+        return obtener_cliente_sesion(self.headers, self.redirect)
+
     def do_GET(self):
         path = self.path.split('?')[0] 
 
@@ -36,44 +41,45 @@ class Manejador(BaseHTTPRequestHandler):
             self.serve_page('AdminPaginaPrincipal.html')
             return
         if path == '/ClientePaginaPrincipal':
-            self.serve_page('ClientePaginaPrincipal.html')
+            cliente = self.get_cliente()
+            if not cliente: return
+            self.serve_page('ClientePaginaPrincipal.html', cliente=cliente)
             return
         if path == '/Perfil':
-            self.serve_page('Perfil.html')
-            return
-
-        if path == '/EditarPerfil':
-            self.serve_page('EditarPerfil.html')
+            cliente = self.get_cliente()
+            if not cliente: return
+            self.serve_page('Perfil.html', cliente=cliente)
             return
         
 
-        # 4) se agreggo Endpoint: /getPerfil?idCliente=XYZ → datos de un único perfil (JSON)
+        ############################
+        ### GESTIONAR SESION ###
+        ############################
+
+        # ENDPOINT: Aquí este endpoint devuelve los datos del perfil de un cliente 
         if path.startswith('/getPerfil'):
+            # Paso 1: leer parámetro opcional idCliente desde la query string
             print("[DEBUG] Entrando a /getPerfil")
             query = parse_qs(urlparse(self.path).query)
-            id_cliente = query.get('idCliente', [None])[0]
-            print(f"[DEBUG] id_cliente recibido: {id_cliente}")
-            if not id_cliente:
-                print("[DEBUG] Falta idCliente en la query")
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Falta idCliente'}).encode('utf-8'))
-                return
-            try:
-                id_int = int(id_cliente)
-                print(f"[DEBUG] id_cliente convertido a int: {id_int}")
-            except ValueError:
-                print("[DEBUG] idCliente inválido (no es int)")
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'idCliente inválido'}).encode('utf-8'))
-                return
+            raw_id = query.get('idCliente', [None])[0]
+            if raw_id:
+                # Si viene idCliente válido en la URL, convertirlo a entero
+                try:
+                    id_int = int(raw_id)
+                except ValueError:
+                    # Si la conversión falla, ignorar y usar la sesión
+                    id_int = None
+            else:
+                # Si no viene idCliente, obtenerlo directamente de la sesión autenticada
+                cliente = self.get_cliente()
+                if not cliente: return
+                id_int = cliente['id']
 
+            # Paso 2: recuperar datos desde la base de datos
             perfil = obtener_perfil(id_int)
             print(f"[DEBUG] Resultado de obtener_perfil({id_int}): {perfil}")
             if not perfil:
+                # Paso 3: si no existe perfil, devolver error 404 
                 print("[DEBUG] No se encontró el perfil en la base de datos")
                 self.send_response(404)
                 self.send_header('Content-Type', 'application/json')
@@ -81,15 +87,40 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'Cliente no encontrado'}).encode('utf-8'))
                 return
 
-            # Convertir Decimal a float si es necesario
+            # Paso 4: convertir campos Decimal a tipo float
             if isinstance(perfil.get('saldo'), decimal.Decimal):
                 perfil['saldo'] = float(perfil['saldo'])
 
+            # Paso 5: devolver el objeto perfil serializado 
             print(f"[DEBUG] Perfil final a devolver: {perfil}")
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(perfil).encode('utf-8'))
+            return
+        
+        ########################
+        ### GESTIONAR PERFIL ###
+        ########################
+        # Nuevo endpoint: Obtener historial de descargas del cliente
+        if path == '/getHistorial':
+            cliente = self.get_cliente()
+            if not cliente: return
+            historial = obtener_historial(cliente['id'])
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(historial).encode('utf-8'))
+            return
+        # Nuevo endpoint: Obtener notas del cliente desde BD
+        if path == '/getNotas':
+            cliente = self.get_cliente()
+            if not cliente: return
+            notas = obtener_notas(cliente['id'])
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(notas).encode('utf-8'))
             return
 
         ############################
@@ -345,12 +376,20 @@ class Manejador(BaseHTTPRequestHandler):
         # Si la ruta no coincide con ninguna, devolver un error 404
         self.send_error(404, "Página no encontrada")
 
-    def serve_page(self, template_name):
+    def serve_page(self, template_name, cliente=None):
         """Sirve una página HTML desde la carpeta de plantillas."""
         try:
             # Cargar la plantilla HTML
             with open(os.path.join('templates', template_name), 'r', encoding='utf-8') as f:
                 html = f.read()
+
+            # Inyectar id_cliente en plantilla si está disponible
+            if cliente is not None:
+                # Inyectar ID y username en la plantilla
+                html = html.replace('{{ID_CLIENTE}}', str(cliente['id']))
+                html = html.replace('{{USERNAME}}', cliente['username'])
+                # Inyectar nombre completo del cliente
+                html = html.replace('{{NOMBRE}}', cliente.get('nombre', cliente['username']))
 
             # Enviar la respuesta al cliente
             self.send_response(200)
@@ -470,7 +509,12 @@ class Manejador(BaseHTTPRequestHandler):
                 )
                 cliente = cursor.fetchone()
                 if cliente:
-                    self.redirect('/ClientePaginaPrincipal')
+                    # Crear sesión cliente y setear cookie
+                    sid = crear_sesion(cliente)
+                    self.send_response(302)
+                    self.send_header('Set-Cookie', f'session_id={sid}; HttpOnly; Path=/')
+                    self.send_header('Location', '/ClientePaginaPrincipal')
+                    self.end_headers()
                     return
                 else:
                     # Credenciales incorrectas
@@ -796,9 +840,9 @@ class Manejador(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': resultado['error']}).encode('utf-8'))
             return
         
-        # -------------------------
-        # 6) ACTUALIZAR PERFIL (sin usar cgi)
-        # -------------------------
+        ############################
+        ### GESTIONAR PERFIL ###
+        ############################
         if self.path == '/actualizarPerfil':
             print("[DEBUG] Entrando a /actualizarPerfil")
             # 1) Verificar que venga como application/x-www-form-urlencoded
@@ -872,10 +916,11 @@ class Manejador(BaseHTTPRequestHandler):
             print(f"[DEBUG] Resultado editar_perfil: exito={exito}, mensaje={mensaje}")
 
             if exito:
-                print("[DEBUG] Perfil actualizado correctamente, redirigiendo a /Perfil")
-                self.send_response(302)
-                self.send_header('Location', f'/Perfil?idCliente={id_int}&exito=1')
+                print("[DEBUG] Perfil actualizado correctamente, enviando JSON de éxito")
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
                 self.end_headers()
+                self.wfile.write(json.dumps({'success': True, 'mensaje': mensaje}).encode('utf-8'))
             else:
                 print("[DEBUG] Error al actualizar perfil")
                 self.send_response(400)
